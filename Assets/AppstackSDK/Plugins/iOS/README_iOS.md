@@ -2,6 +2,8 @@
 
 ## 1. Add the Appstack iOS SDK (XCFramework)
 
+Unity’s standard iOS build **does not support Swift Package Manager (SPM)**. The generated Xcode project does not resolve SPM dependencies, so the iOS SDK must be integrated as a vendored **XCFramework** (or static/framework binary) in `Plugins/iOS/`. This matches how other Unity iOS plugins ship native SDKs.
+
 The Unity plugin expects the **AppstackSDK.xcframework** to be present so the native bridge can call the iOS SDK.
 
 - **Option A:** Copy the xcframework from one of the sibling SDKs into this folder:
