@@ -21,14 +21,29 @@ The Appstack Unity SDK lets you:
 
 ## Installation
 
-1. **Copy or clone** this package into your project, for example:
-   - `Assets/AppstackSDK/` (full folder from this repo)
+### Option A: Unity Package Manager (OpenUPM)
 
-2. **iOS:** Add the Appstack iOS SDK (XCFramework) and configure Info.plist.  
-   See [Assets/AppstackSDK/Plugins/iOS/README_iOS.md](Assets/AppstackSDK/Plugins/iOS/README_iOS.md).
+1. Add the **OpenUPM** scoped registry: [OpenUPM – Getting started](https://openupm.com/docs/getting-started.html) (add `https://package.openupm.com` as a scoped registry for `com.appstack`).
+2. In Unity: **Window → Package Manager → + → Add package by name** → `com.appstack.unity-sdk`.
+3. Complete **iOS** and **Android** setup below.
 
-3. **Android:** Add the Appstack Android SDK dependency (EDM4U or manual Gradle).  
-   See [Assets/AppstackSDK/Plugins/Android/README_Android.md](Assets/AppstackSDK/Plugins/Android/README_Android.md).
+### Option B: Manual (copy or zip)
+
+1. **Copy or clone** this package into your project, e.g. `Assets/AppstackSDK/`, or download the zip from [Releases](https://github.com/appstack-tech/appstack-unity-sdk/releases) and unzip into your project root.
+2. Complete **iOS** and **Android** setup below.
+
+### iOS setup
+
+Add the Appstack iOS SDK (XCFramework) and configure Info.plist.  
+See [Assets/AppstackSDK/Plugins/iOS/README_iOS.md](Assets/AppstackSDK/Plugins/iOS/README_iOS.md).
+
+### Android setup
+
+Add the Appstack Android SDK dependency (EDM4U or manual Gradle).  
+See [Assets/AppstackSDK/Plugins/Android/README_Android.md](Assets/AppstackSDK/Plugins/Android/README_Android.md).
+
+**Registering on OpenUPM (one-time)**  
+To have the package appear in the OpenUPM registry, submit it once via the [OpenUPM add form](https://openupm.com/packages/add/) or by opening a PR to [openupm/openupm](https://github.com/openupm/openupm) with the metadata from [`.openupm/package-metadata.yml`](.openupm/package-metadata.yml). After that, new Git tags will be built and published automatically.
 
 ## Quick Start
 
@@ -108,6 +123,17 @@ Same set as Flutter/React Native:
 - [Usage guide](USAGE.md)
 - [iOS setup](Assets/AppstackSDK/Plugins/iOS/README_iOS.md)
 - [Android setup](Assets/AppstackSDK/Plugins/Android/README_Android.md)
+
+## Releasing (CD)
+
+Releases use **GitHub Actions** and **OpenUPM** (UPM).
+
+1. **Update version:** Set `version` in `Assets/AppstackSDK/package.json` and update `CHANGELOG.md`.
+2. **Tag and push:** e.g. `git tag 1.0.0 && git push origin 1.0.0`
+3. **Workflow** [`.github/workflows/release.yml`](.github/workflows/release.yml):
+   - Verifies `package.json` version matches the tag
+   - Creates a **GitHub Release** with a zip for manual install
+   - **OpenUPM** builds from the same tag once the package is [registered on OpenUPM](https://openupm.com/packages/add/) (one-time: submit the repo via their form or a PR to [openupm/openupm](https://github.com/openupm/openupm) with the package metadata; see [`.openupm/package-metadata.yml`](.openupm/package-metadata.yml)).
 
 ## License
 

@@ -1,0 +1,75 @@
+# Publish Appstack Unity SDK: GitHub Release + UPM-ready package
+# Trigger: push a version tag (e.g. 1.0.0). Ensure package.json version matches the tag before tagging.
+# - Creates a GitHub Release with a zip for manual install.
+# - OpenUPM builds from the same tag once the package is registered at openupm.com.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create release and package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set version from tag
+        id: version
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Verify package.json version matches tag
+        run: |
+          TAG="${{ steps.version.outputs.version }}"
+          PKG_VERSION=$(node -e "console.log(require('./Assets/AppstackSDK/package.json').version)")
+          if [ "$PKG_VERSION" != "$TAG" ]; then
+            echo "::error::package.json version ($PKG_VERSION) does not match tag ($TAG). Update Assets/AppstackSDK/package.json before tagging."
+            exit 1
+          fi
+          echo "package.json version matches tag: $TAG"
+
+      - name: Create package zip
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          PKG_NAME="appstack-unity-sdk-${VERSION}"
+          mkdir -p "dist/${PKG_NAME}"
+          # Root docs and license (user can copy to project root)
+          cp LICENSE README.md CHANGELOG.md USAGE.md "dist/${PKG_NAME}/" 2>/dev/null || true
+          # Assets tree: unzip in Unity project root to get Assets/AppstackSDK
+          mkdir -p "dist/${PKG_NAME}/Assets"
+          cp -r Assets/AppstackSDK "dist/${PKG_NAME}/Assets/"
+          (cd dist && zip -r "${PKG_NAME}.zip" "${PKG_NAME}" -x "*.DS_Store")
+          mv "dist/${PKG_NAME}.zip" .
+          echo "package_name=${PKG_NAME}.zip" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ steps.version.outputs.version }}
+          body: |
+            ## Appstack Unity SDK ${{ steps.version.outputs.version }}
+            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CHANGELOG.md) for details.
+            ### Install via Unity Package Manager (OpenUPM)
+            1. Add the OpenUPM scoped registry: https://openupm.com/docs/adding-upm-package.html
+            2. In Unity: **Window → Package Manager → + → Add package by name** → `com.appstack.unity-sdk`
+            ### Install manually
+            1. Download the `appstack-unity-sdk-${{ steps.version.outputs.version }}.zip` below.
+            2. Unzip into your Unity project so that `Assets/AppstackSDK` exists.
+            3. Follow [iOS](Assets/AppstackSDK/Plugins/iOS/README_iOS.md) and [Android](Assets/AppstackSDK/Plugins/Android/README_Android.md) setup.
+          files: ${{ env.package_name }}
+          draft: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
