@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-void _AppstackUnity_Configure(const char* apiKey, bool isDebug, const char* endpointBaseUrl, int logLevel, const char* customerUserId);
+void _AppstackUnity_Configure(const char* apiKey, int logLevel, const char* customerUserId);
 void _AppstackUnity_SendEvent(const char* eventType, const char* eventName, const char* parametersJson);
 void _AppstackUnity_EnableAppleAdsAttribution();
 const char* _AppstackUnity_GetAppstackId(void);

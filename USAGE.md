@@ -31,9 +31,7 @@ With all options:
 ```csharp
 AppstackSDK.Configure(
     apiKey: "your-api-key",
-    isDebug: false,
-    endpointBaseUrl: null,  // or "https://api.event.dev.appstack.tech/..."
-    logLevel: 1,           // 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR
+    logLevel: 1,           // 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR (iOS folds WARN into ERROR)
     customerUserId: "user-123"
 );
 ```
@@ -89,7 +87,7 @@ Call after `Configure` on iOS builds only:
 #endif
 ```
 
-Requires iOS 14.3+ and the `NSAdvertisingAttributionReportEndpoint` entry in Info.plist (see [iOS README](Assets/AppstackSDK/Plugins/iOS/README_iOS.md)).
+Requires iOS 15.0+ and the `NSAdvertisingAttributionReportEndpoint` entry in Info.plist (see [iOS README](Assets/AppstackSDK/Plugins/iOS/README_iOS.md)).
 
 ## Appstack ID and attribution parameters
 

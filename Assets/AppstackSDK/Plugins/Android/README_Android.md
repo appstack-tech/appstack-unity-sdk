@@ -22,7 +22,7 @@ If you do **not** use EDM4U, add the dependency and repository to your Unity And
      ```
    - In `dependencies` (or in the `dependencies` block of the `unityProject` subproject that compiles your plugins), add:
      ```gradle
-     implementation 'tech.appstack.android-sdk:appstack-android-sdk:1.3.1'
+     implementation 'tech.appstack.android-sdk:appstack-android-sdk:1.5.0-rc0'
      ```
 
 2. Rebuild your Android project.
