@@ -15,7 +15,7 @@ The Appstack Unity SDK lets you:
 
 ## Requirements
 
-- **Unity:** 2019.4 LTS or newer (tested with 2021.3+)
+- **Unity:** Unity 6 (`6000.0`) or newer
 - **iOS:** 15.0+ (required by the Appstack iOS SDK)
 - **Android:** minSdk 21, targetSdk 34+, Java 17+
 
@@ -27,20 +27,20 @@ The Appstack Unity SDK lets you:
 2. In Unity: **Window → Package Manager → + → Add package by name** → `com.appstack.unity-sdk`.
 3. Complete **iOS** and **Android** setup below.
 
-### Option B: Manual (copy or zip)
+### Option B: Local package
 
-1. **Copy or clone** this package into your project, e.g. `Assets/AppstackSDK/`, or download the zip from [Releases](https://github.com/appstack-tech/appstack-unity-sdk/releases) and unzip into your project root.
+1. Clone this repository and add it from Unity Package Manager with **Add package from disk**, selecting its root `package.json`, or use a `file:` dependency in the consuming project's manifest.
 2. Complete **iOS** and **Android** setup below.
 
 ### iOS setup
 
-Add the Appstack iOS SDK (XCFramework) and configure Info.plist.  
-See [Assets/AppstackSDK/Plugins/iOS/README_iOS.md](Assets/AppstackSDK/Plugins/iOS/README_iOS.md).
+Resolve the Appstack iOS Swift package with EDM4U and configure iOS.
+See [Documentation~/iOS.md](Documentation~/iOS.md).
 
 ### Android setup
 
 Add the Appstack Android SDK dependency (EDM4U or manual Gradle).  
-See [Assets/AppstackSDK/Plugins/Android/README_Android.md](Assets/AppstackSDK/Plugins/Android/README_Android.md).
+See [Documentation~/Android.md](Documentation~/Android.md).
 
 **Registering on OpenUPM (one-time)**  
 To have the package appear in the OpenUPM registry, submit it once via the [OpenUPM add form](https://openupm.com/packages/add/) or by opening a PR to [openupm/openupm](https://github.com/openupm/openupm) with the metadata from [`.openupm/package-metadata.yml`](.openupm/package-metadata.yml). After that, new Git tags will be built and published automatically.
@@ -119,8 +119,8 @@ Same set as Flutter/React Native:
 ## Documentation
 
 - [Usage guide](USAGE.md)
-- [iOS setup](Assets/AppstackSDK/Plugins/iOS/README_iOS.md)
-- [Android setup](Assets/AppstackSDK/Plugins/Android/README_Android.md)
+- [iOS setup](Documentation~/iOS.md)
+- [Android setup](Documentation~/Android.md)
 
 ## Releasing (CD)
 
@@ -135,4 +135,4 @@ Releases use **GitHub Actions** and **OpenUPM** (UPM).
 
 ## License
 
-MIT – see [LICENSE](LICENSE).
+MIT – see [LICENSE.md](LICENSE.md).

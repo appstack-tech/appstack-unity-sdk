@@ -1,0 +1,2 @@
+-keep class com.appstack.unity.AppstackUnityBridge { *; }
+-keep interface com.appstack.unity.AppstackUnityBridge$AttributionParamsCallback { *; }

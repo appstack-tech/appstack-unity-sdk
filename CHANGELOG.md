@@ -8,6 +8,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Restructured the repository as a root-level UPM package using
+  `Runtime/`, `Editor/`, `Tests/`, `Samples~/`, and `Documentation~/`.
+- Set the initial package floor to Unity 6 (`6000.0`) and retained the
+  existing package identifier `com.appstack.unity-sdk`.
+- Replaced the prototype assembly names with `Appstack.Unity`,
+  `Appstack.Unity.Editor`, and `Appstack.Unity.Tests`.
+- Standardized the native wrapper identifier as `unity-1.0.0`.
+- Added the iOS `AppstackSDK` Swift package dependency at `4.4.0-rc0`.
+- Reworked Android and iOS attribution callbacks around request IDs and the
+  caller's captured synchronization context, while preserving the existing
+  public `AppstackSDK` API.
 - Aligned with the current native SDK APIs (iOS 4.4.0-rc0, Android 1.5.0-rc0):
   - `Configure(apiKey, logLevel?, customerUserId?)` — removed the `isDebug` and
     `endpointBaseUrl` parameters, which are deprecated no-ops in the native SDKs.

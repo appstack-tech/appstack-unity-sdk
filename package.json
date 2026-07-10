@@ -1,0 +1,33 @@
+{
+  "name": "com.appstack.unity-sdk",
+  "displayName": "Appstack SDK",
+  "version": "1.0.0",
+  "unity": "6000.0",
+  "description": "Unity wrapper for the Appstack native attribution SDKs on iOS and Android.",
+  "author": {
+    "name": "Appstack",
+    "url": "https://appstack.tech"
+  },
+  "license": "MIT",
+  "keywords": [
+    "analytics",
+    "attribution",
+    "appstack",
+    "ios",
+    "android",
+    "apple-search-ads"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/appstack-tech/appstack-unity-sdk.git"
+  },
+  "documentationUrl": "https://github.com/appstack-tech/appstack-unity-sdk#readme",
+  "changelogUrl": "https://github.com/appstack-tech/appstack-unity-sdk/blob/main/CHANGELOG.md",
+  "samples": [
+    {
+      "displayName": "Basic Integration",
+      "description": "Manual SDK configuration and event tracking example.",
+      "path": "Samples~/Basic"
+    }
+  ]
+}

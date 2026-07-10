@@ -87,7 +87,7 @@ Call after `Configure` on iOS builds only:
 #endif
 ```
 
-Requires iOS 15.0+ and the `NSAdvertisingAttributionReportEndpoint` entry in Info.plist (see [iOS README](Assets/AppstackSDK/Plugins/iOS/README_iOS.md)).
+Requires iOS 15.0+ and the iOS setup described in [Documentation~/iOS.md](Documentation~/iOS.md).
 
 ## Appstack ID and attribution parameters
 
