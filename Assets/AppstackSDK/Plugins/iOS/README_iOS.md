@@ -6,10 +6,9 @@ Unity’s standard iOS build **does not support Swift Package Manager (SPM)**. T
 
 The Unity plugin expects the **AppstackSDK.xcframework** to be present so the native bridge can call the iOS SDK.
 
-- **Option A:** Copy the xcframework from one of the sibling SDKs into this folder:
-  - From `react-native-appstack-sdk/ios/AppstackSDK.xcframework`
-  - Or from `appstack-flutter-sdk/appstack_plugin/ios/AppstackSDK.xcframework`
-  - Or from `ios-appstack-sdk/AppstackSDK.xcframework`
+**Required version: 4.4.0-rc0 or newer.** The bridge uses the current `configure(apiKey:logLevel:customerUserId:wrapperVersion:)` wrapper entry point (`@_spi(AppstackInternal)`); older xcframeworks (with the removed `isDebug`/`endpointBaseUrl` options) will not compile.
+
+- **Option A:** Build the xcframework from [`appstack-ios-sdk`](https://github.com/appstack-tech/appstack-ios-sdk) at tag `4.4.0-rc0` and copy it into this folder.
 - **Option B:** Download the xcframework from your Appstack distribution channel if provided.
 
 Place it so the path is:
@@ -39,4 +38,4 @@ For Apple Search Ads attribution, add to your app’s `Info.plist`:
 
 ## 4. Minimum iOS version
 
-Set your Unity iOS build minimum version to **iOS 13.0** or higher (14.3+ recommended for Apple Search Ads).
+Set your Unity iOS build minimum version (Player Settings → Target minimum iOS Version) to **iOS 15.0** or higher. The Appstack iOS SDK declares iOS 15 as its minimum platform; builds targeting lower versions will fail to compile the Swift bridge.

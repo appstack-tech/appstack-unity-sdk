@@ -28,14 +28,11 @@ namespace Appstack
         /// Must be called before any other SDK methods.
         /// </summary>
         /// <param name="apiKey">Your Appstack API key from the dashboard.</param>
-        /// <param name="isDebug">Enable debug mode (optional, default false).</param>
-        /// <param name="endpointBaseUrl">Custom endpoint base URL (optional).</param>
-        /// <param name="logLevel">Log level: 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR (optional, default 1).</param>
+        /// <param name="logLevel">Log level: 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR (optional, default 1).
+        /// iOS has no dedicated WARN tier, so 2 behaves like 3 there.</param>
         /// <param name="customerUserId">Optional customer user ID (optional).</param>
         public static void Configure(
             string apiKey,
-            bool isDebug = false,
-            string endpointBaseUrl = null,
             int logLevel = 1,
             string customerUserId = null)
         {
@@ -48,8 +45,6 @@ namespace Appstack
             {
                 AppstackSDKNative.Configure(
                     apiKey.Trim(),
-                    isDebug,
-                    endpointBaseUrl?.Trim() ?? "",
                     logLevel,
                     customerUserId?.Trim() ?? "");
             }

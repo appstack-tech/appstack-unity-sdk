@@ -1,8 +1,11 @@
 package com.appstack.unity
 
+import android.content.Context
+import android.content.pm.PackageManager
 import android.util.Log
 import com.appstack.attribution.AppstackAttributionSdk
 import com.appstack.attribution.EventType
+import com.appstack.attribution.InternalAppstackApi
 import com.appstack.attribution.LogLevel
 import com.unity3d.player.UnityPlayer
 import org.json.JSONObject
@@ -14,12 +17,13 @@ import org.json.JSONObject
 object AppstackUnityBridge {
 
     private const val TAG = "AppstackUnityBridge"
+    private const val WRAPPER_VERSION = "unity-1.0.0"
 
+    // setProxyUrl + configureWrapper are gated behind @RequiresOptIn(InternalAppstackApi).
+    @OptIn(InternalAppstackApi::class)
     @JvmStatic
     fun configure(
         apiKey: String,
-        isDebug: Boolean,
-        endpointBaseUrl: String,
         logLevel: Int,
         customerUserId: String
     ) {
@@ -39,25 +43,35 @@ object AppstackUnityBridge {
             3 -> LogLevel.ERROR
             else -> LogLevel.INFO
         }
-        val endpoint = if (endpointBaseUrl.isBlank()) null else endpointBaseUrl
-        val customerId = if (customerUserId.isBlank()) null else customerUserId
-        if (endpoint != null) {
-            AppstackAttributionSdk.configure(
-                context = context,
-                apiKey = apiKey,
-                isDebug = isDebug,
-                endpointBaseUrl = endpoint,
-                logLevel = logLevelEnum,
-                customerUserId = customerId
+
+        // Testing-only proxy override, read from the app's manifest metadata. This is NOT
+        // exposed through the public Configure() API: a proxy URL is applied only if the
+        // host app deliberately ships an APPSTACK_DEV_PROXY_URL <meta-data> entry;
+        // published-package consumers do not. Routed through the SDK's internal
+        // setProxyUrl hook, before configure so the SDK's initial requests target it.
+        readDevProxyUrl(context)?.takeIf { it.isNotBlank() }?.let {
+            AppstackAttributionSdk.setProxyUrl(it)
+        }
+
+        // configureWrapper is the internal entry point that records the Unity wrapper version.
+        AppstackAttributionSdk.configureWrapper(
+            context = context,
+            apiKey = apiKey.trim(),
+            wrapperVersion = WRAPPER_VERSION,
+            logLevel = logLevelEnum,
+            customerUserId = customerUserId.takeIf { it.isNotBlank() }
+        )
+    }
+
+    private fun readDevProxyUrl(context: Context): String? {
+        return try {
+            val appInfo = context.packageManager.getApplicationInfo(
+                context.packageName,
+                PackageManager.GET_META_DATA
             )
-        } else {
-            AppstackAttributionSdk.configure(
-                context = context,
-                apiKey = apiKey,
-                isDebug = isDebug,
-                logLevel = logLevelEnum,
-                customerUserId = customerId
-            )
+            appInfo.metaData?.getString("APPSTACK_DEV_PROXY_URL")
+        } catch (e: Exception) {
+            null
         }
     }
 

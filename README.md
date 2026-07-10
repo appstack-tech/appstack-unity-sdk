@@ -16,7 +16,7 @@ The Appstack Unity SDK lets you:
 ## Requirements
 
 - **Unity:** 2019.4 LTS or newer (tested with 2021.3+)
-- **iOS:** 13.0+ (14.3+ recommended for Apple Search Ads)
+- **iOS:** 15.0+ (required by the Appstack iOS SDK)
 - **Android:** minSdk 21, targetSdk 34+, Java 17+
 
 ## Installation
@@ -78,14 +78,12 @@ public class AppstackInitializer : MonoBehaviour
 
 ## API (aligned with Flutter / React Native)
 
-### `AppstackSDK.Configure(apiKey, isDebug?, endpointBaseUrl?, logLevel?, customerUserId?)`
+### `AppstackSDK.Configure(apiKey, logLevel?, customerUserId?)`
 
 Initializes the SDK. Must be called before any other methods.
 
 - **apiKey** – Your platform-specific API key from the Appstack dashboard.
-- **isDebug** – Optional, default `false`.
-- **endpointBaseUrl** – Optional custom endpoint.
-- **logLevel** – 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR; default `1`.
+- **logLevel** – 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR; default `1`. (iOS has no dedicated WARN tier, so 2 behaves like 3 there.)
 - **customerUserId** – Optional customer user ID.
 
 ### `AppstackSDK.SendEvent(eventType, eventName?, parameters?)`

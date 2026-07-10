@@ -13,8 +13,6 @@ namespace Appstack
         [System.Runtime.InteropServices.DllImport("__Internal")]
         private static extern void _AppstackUnity_Configure(
             string apiKey,
-            bool isDebug,
-            string endpointBaseUrl,
             int logLevel,
             string customerUserId);
 
@@ -73,15 +71,11 @@ namespace Appstack
 
         public static void Configure(
             string apiKey,
-            bool isDebug,
-            string endpointBaseUrl,
             int logLevel,
             string customerUserId)
         {
             _AppstackUnity_Configure(
                 apiKey ?? "",
-                isDebug,
-                endpointBaseUrl ?? "",
                 logLevel,
                 customerUserId ?? "");
         }
@@ -134,16 +128,12 @@ namespace Appstack
 
         public static void Configure(
             string apiKey,
-            bool isDebug,
-            string endpointBaseUrl,
             int logLevel,
             string customerUserId)
         {
             BridgeClass.CallStatic(
                 "configure",
                 apiKey ?? "",
-                isDebug,
-                endpointBaseUrl ?? "",
                 logLevel,
                 customerUserId ?? "");
         }
@@ -185,8 +175,6 @@ namespace Appstack
 #else
         public static void Configure(
             string apiKey,
-            bool isDebug,
-            string endpointBaseUrl,
             int logLevel,
             string customerUserId)
         {

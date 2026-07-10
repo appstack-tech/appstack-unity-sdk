@@ -16,11 +16,10 @@
 
 static void _AppstackUnity_GetAttributionParamsCompletion(const char* paramsJson, const char* error);
 
-void _AppstackUnity_Configure(const char* apiKey, bool isDebug, const char* endpointBaseUrl, int logLevel, const char* customerUserId) {
+void _AppstackUnity_Configure(const char* apiKey, int logLevel, const char* customerUserId) {
     NSString* apiKeyStr = apiKey ? [NSString stringWithUTF8String:apiKey] : @"";
-    NSString* endpointStr = endpointBaseUrl && strlen(endpointBaseUrl) > 0 ? [NSString stringWithUTF8String:endpointBaseUrl] : nil;
     NSString* customerStr = customerUserId && strlen(customerUserId) > 0 ? [NSString stringWithUTF8String:customerUserId] : nil;
-    [AppstackUnityBridge configureWithApiKey:apiKeyStr isDebug:isDebug endpointBaseUrl:endpointStr logLevel:logLevel customerUserId:customerStr];
+    [AppstackUnityBridge configureWithApiKey:apiKeyStr logLevel:logLevel customerUserId:customerStr];
 }
 
 void _AppstackUnity_SendEvent(const char* eventType, const char* eventName, const char* parametersJson) {
