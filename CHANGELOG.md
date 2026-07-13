@@ -1,33 +1,26 @@
 # Changelog
 
-All notable changes to the Appstack Unity SDK will be documented in this file.
+All notable changes to the Appstack Unity SDK are documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+The format is based on [Keep a
+Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-### Changed
-
-- Aligned with the current native SDK APIs (iOS 4.4.0-rc0, Android 1.5.0-rc0):
-  - `Configure(apiKey, logLevel?, customerUserId?)` — removed the `isDebug` and
-    `endpointBaseUrl` parameters, which are deprecated no-ops in the native SDKs.
-    Endpoint override is now an internal-only hook: the bridges apply
-    `setProxyUrl` when the host app ships an `APPSTACK_DEV_PROXY_URL`
-    Info.plist key (iOS) / manifest `<meta-data>` entry (Android).
-  - Bridges now use the internal wrapper entry points
-    (`configureWrapper` on Android, `@_spi(AppstackInternal)`
-    `configure(..., wrapperVersion:)` on iOS) and report `unity-1.0.0` as the
-    wrapper version.
-  - Fixed the iOS log-level mapping to the cross-platform contract
-    (0=DEBUG, 1=INFO, 2=WARN, 3=ERROR; WARN folds into ERROR on iOS).
-  - Minimum iOS version is now 15.0 (required by the Appstack iOS SDK).
-  - Android dependency bumped from 1.3.1 to 1.5.0-rc0 (EDM4U and manual Gradle docs).
-
 ### Added
 
-- Initial Unity SDK aligned with Flutter and React Native strategy:
-  - C# API: `AppstackSDK` (Configure, SendEvent, EnableAppleAdsAttribution, GetAppstackId, IsSdkDisabled, GetAttributionParams)
-  - `EventType` enum matching other SDKs
-  - iOS native plugin (Swift bridge + ObjC C exports) using AppstackSDK.xcframework
-  - Android native plugin (Kotlin bridge) using Appstack Android SDK via Gradle/EDM4U
-  - README, USAGE, and platform-specific setup guides
+- Initial Unity Package Manager distribution as `com.appstack.unity-sdk` for
+  Unity 6 (`6000.0`) or newer.
+- Support for iOS 15.0+ through Appstack iOS SDK `4.4.0-rc0` and Android API
+  level 21+ through Appstack Android SDK `1.5.0-rc1`.
+- SDK configuration with an API key, log level, and optional customer user ID.
+- Standard and custom event tracking with optional event parameters.
+- Apple Ads attribution on iOS.
+- Appstack ID, SDK status, and asynchronous attribution-parameter retrieval.
+- Concurrent attribution requests with callbacks returned to the captured
+  synchronization context when available.
+- Automatic iOS Swift Package Manager integration through the Unity Xcode
+  postprocessor, including dynamic-framework embedding in the application.
+- Automatic Android native dependency resolution through EDM4U.
+- Automatic Android R8/ProGuard configuration with no custom keep-rules step.
+- Basic Integration sample for manual SDK configuration and event tracking.
