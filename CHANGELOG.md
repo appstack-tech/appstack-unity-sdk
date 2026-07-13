@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   `Appstack.Unity.Editor`, and `Appstack.Unity.Tests`.
 - Standardized the native wrapper identifier as `unity-1.0.0`.
 - Added the iOS `AppstackSDK` Swift package dependency at `4.4.0-rc0`.
+- Documented EDM4U 1.2.187 as the minimum version for iOS Swift Package Manager
+  support.
 - Reworked Android and iOS attribution callbacks around request IDs and the
   caller's captured synchronization context, while preserving the existing
   public `AppstackSDK` API.

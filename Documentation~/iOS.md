@@ -2,9 +2,10 @@
 
 ## 1. Resolve the Appstack iOS SDK
 
-Install EDM4U and let it process `Editor/AppstackDependencies.xml`. The package
-declares the `AppstackSDK` Swift package product from `ios-appstack-sdk` at
-version `4.4.0-rc0`.
+Install EDM4U 1.2.187 or newer and let it process
+`Editor/AppstackDependencies.xml`. EDM4U added Swift Package Manager support in
+1.2.187. The package declares the `AppstackSDK` Swift package product from
+`ios-appstack-sdk` at version `4.4.0-rc0`.
 
 This SPM integration is the supported path for the first Unity SDK release and
 requires Unity 6. Older-Unity fallback distribution is not part of this release.

@@ -18,6 +18,7 @@ The Appstack Unity SDK lets you:
 - **Unity:** Unity 6 (`6000.0`) or newer
 - **iOS:** 15.0+ (required by the Appstack iOS SDK)
 - **Android:** minSdk 21, targetSdk 34+, Java 17+
+- **EDM4U:** 1.2.187 or newer for iOS Swift Package Manager support
 
 ## Installation
 
@@ -34,7 +35,7 @@ The Appstack Unity SDK lets you:
 
 ### iOS setup
 
-Resolve the Appstack iOS Swift package with EDM4U and configure iOS.
+Resolve the Appstack iOS Swift package with EDM4U 1.2.187 or newer and configure iOS.
 See [Documentation~/iOS.md](Documentation~/iOS.md).
 
 ### Android setup
@@ -126,7 +127,7 @@ Same set as Flutter/React Native:
 
 Releases use **GitHub Actions** and **OpenUPM** (UPM).
 
-1. **Update version:** Set `version` in `Assets/AppstackSDK/package.json` and update `CHANGELOG.md`.
+1. **Update version:** Set `version` in the root `package.json` and update `CHANGELOG.md`.
 2. **Tag and push:** e.g. `git tag 1.0.0 && git push origin 1.0.0`
 3. **Workflow** [`.github/workflows/release.yml`](.github/workflows/release.yml):
    - Verifies `package.json` version matches the tag
