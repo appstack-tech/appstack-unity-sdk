@@ -2,6 +2,7 @@ import Foundation
 @_spi(AppstackInternal) @preconcurrency import AppstackSDK
 
 private let wrapperVersion = "unity-1.0.0"
+/// May run on any thread; C# posts to the captured context when available.
 public typealias AppstackUnityAttributionCallback = @convention(c) (
     Int32,
     UnsafeMutablePointer<CChar>?,

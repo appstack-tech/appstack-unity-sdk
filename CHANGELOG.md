@@ -21,6 +21,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   public `AppstackSDK` API.
 - Normalized event-name handling across platforms: only `CUSTOM` events forward
   the caller-supplied name; standard events use their canonical event type.
+- Made Android event-type parsing locale-independent and documented callback
+  threading and automatic Android minification handling.
 - Aligned with the current native SDK APIs (iOS 4.4.0-rc0, Android 1.5.0-rc0):
   - `Configure(apiKey, logLevel?, customerUserId?)` — removed the `isDebug` and
     `endpointBaseUrl` parameters, which are deprecated no-ops in the native SDKs.

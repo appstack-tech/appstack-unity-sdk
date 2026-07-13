@@ -9,6 +9,7 @@ import com.appstack.attribution.EventType;
 import com.appstack.attribution.LogLevel;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import kotlin.ResultKt;
 import kotlin.coroutines.Continuation;
@@ -22,6 +23,7 @@ public final class AppstackUnityBridge {
     private static final String WRAPPER_VERSION = "unity-1.0.0";
     private static final String DEV_PROXY_URL_KEY = "APPSTACK_DEV_PROXY_URL";
 
+    /** May run on any thread; C# posts to the captured context when available. */
     public interface AttributionParamsCallback {
         void onResult(int requestId, String json, String error);
     }
@@ -166,7 +168,7 @@ public final class AppstackUnityBridge {
         }
 
         try {
-            return EventType.valueOf(eventType);
+            return EventType.valueOf(eventType.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ignored) {
             return EventType.CUSTOM;
         }

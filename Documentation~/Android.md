@@ -25,6 +25,15 @@ If you do **not** use EDM4U, add the dependency and repository to your Unity And
 
 2. Rebuild your Android project.
 
+## Minification (R8/ProGuard)
+
+No manual keep-rule configuration is required. The package automatically merges
+the Unity bridge rules into the generated `unityLibrary/proguard-unity.txt` file.
+The Appstack Android AAR supplies its own consumer rules for the native SDK.
+These rules take effect when minification is enabled.
+
+You do not need to enable Unity's **Custom Proguard File** setting for Appstack.
+
 ## Requirements
 
 - **minSdkVersion:** 21 (Android 5.0)  
