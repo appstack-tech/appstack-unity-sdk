@@ -19,11 +19,7 @@ public func AppstackUnityConfigure(
         return
     }
 
-    if let proxyUrl = Bundle.main.object(
-        forInfoDictionaryKey: "APPSTACK_DEV_PROXY_URL"
-    ) as? String, !proxyUrl.isEmpty {
-        AppstackAttributionSdk.shared.setProxyUrl(proxyUrl)
-    }
+    applyDevelopmentProxy(from: .main)
 
     AppstackAttributionSdk.shared.configure(
         apiKey: apiKey,
@@ -31,6 +27,14 @@ public func AppstackUnityConfigure(
         customerUserId: string(from: customerUserIdPointer),
         wrapperVersion: string(from: wrapperVersionPointer)
     )
+}
+
+internal func applyDevelopmentProxy(from bundle: Bundle) {
+    if let proxyUrl = bundle.object(
+        forInfoDictionaryKey: "APPSTACK_DEV_PROXY_URL"
+    ) as? String, !proxyUrl.isEmpty {
+        AppstackAttributionSdk.shared.setProxyUrl(proxyUrl)
+    }
 }
 
 @_cdecl("AppstackUnitySendEvent")
