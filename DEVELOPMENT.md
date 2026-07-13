@@ -49,14 +49,16 @@ Cross-platform behavior that must remain aligned:
 
 ## Native dependencies
 
-Dependency versions are declared in `Editor/AppstackDependencies.xml`:
+Dependency versions are declared in the platform-specific editor integration:
 
-- Android: `tech.appstack.android-sdk:appstack-android-sdk:1.5.0-rc0`
-- iOS: `AppstackSDK` Swift package product at `4.4.0-rc0`
+- Android: `tech.appstack.android-sdk:appstack-android-sdk:1.5.0-rc1` in
+  `Editor/AppstackDependencies.xml`
+- iOS: `AppstackSDK` Swift package product at `4.4.0-rc0` in
+  `Editor/AppstackIOSPostProcessBuild.cs`
 
-EDM4U 1.2.187 is the minimum version because that release introduced
-`remoteSwiftPackage` support. When native stable versions are published, update
-the XML, public setup documentation, changelog, and validation matrix together.
+When native stable versions are published, update the corresponding editor
+integration, public setup documentation, changelog, and validation matrix
+together.
 
 ## Android architecture
 
@@ -87,10 +89,11 @@ imports the native SDK through `@_spi(AppstackInternal)`. It configures the
 native SDK with the Unity wrapper version and owns any C strings returned to C#
 until `AppstackUnityFreeCString` releases them.
 
-`AppstackIOSPostProcessBuild` adds the Swift bridge to the generated
-`UnityFramework` target, sets its Swift language version, and enables Swift
-standard-library embedding on the application target. EDM4U 1.2.187 also links
-the `AppstackSDK` Swift package product to `UnityFramework`.
+`AppstackIOSPostProcessBuild` adds the exact-version Swift package reference,
+links the product to `UnityFramework` so the bridge compiles, and links it to
+the application target so Xcode embeds and signs the dynamic framework. It also
+sets the Swift language version and enables Swift standard-library embedding on
+the application target.
 
 The `4.4.0-rc0` Swift package currently builds the SDK from source, so its SPI is
 available during compilation. The XCFramework checked into the iOS SDK tag has
@@ -131,8 +134,10 @@ iOS validation:
 1. Export a fresh Xcode project and confirm the Swift package resolves.
 2. Confirm the `AppstackSDK` product and Swift bridge compile in
    `UnityFramework`.
-3. Build or archive for a physical device.
-4. Exercise the same public API operations and verify attribution callback
+3. Confirm the built `.app` contains a signed
+   `Frameworks/AppstackSDK.framework`.
+4. Build or archive for a physical device.
+5. Exercise the same public API operations and verify attribution callback
    threading and UTF-8 values.
 
 Remove any ad-hoc compilation harnesses created under `/tmp` after local checks.

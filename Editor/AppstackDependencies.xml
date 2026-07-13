@@ -1,20 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   Resolved by External Dependency Manager for Unity (EDM4U).
-  Android uses Maven; iOS uses the Swift package product added to the
-  generated Xcode project by EDM4U.
+  Android uses Maven. The iOS Swift package is added by
+  AppstackIOSPostProcessBuild so its dynamic product is linked to both the
+  Unity framework and the host application target.
 -->
 <dependencies>
   <androidPackages>
-    <androidPackage spec="tech.appstack.android-sdk:appstack-android-sdk:1.5.0-rc0">
+    <androidPackage spec="tech.appstack.android-sdk:appstack-android-sdk:1.5.0-rc1">
       <repositories>
         <repository>https://repo1.maven.org/maven2</repository>
         <repository>https://central.sonatype.com/repository/maven-public</repository>
       </repositories>
     </androidPackage>
   </androidPackages>
-
-  <remoteSwiftPackage url="https://github.com/appstack-tech/ios-appstack-sdk.git" version="4.4.0-rc0">
-    <swiftPackage name="AppstackSDK" />
-  </remoteSwiftPackage>
 </dependencies>

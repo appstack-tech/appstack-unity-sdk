@@ -4,14 +4,12 @@
 
 - Unity 6 (`6000.0`) or newer
 - iOS 15.0 or newer
-- External Dependency Manager for Unity (EDM4U) 1.2.187 or newer
 
 ## Configure the project
 
-1. Install EDM4U 1.2.187 or newer in your Unity project.
-2. Open **Edit → Project Settings → Player → iOS**.
-3. Set **Target minimum iOS Version** to `15.0` or newer.
-4. Build the iOS player normally.
+1. Open **Edit → Project Settings → Player → iOS**.
+2. Set **Target minimum iOS Version** to `15.0` or newer.
+3. Build the iOS player normally.
 
 Appstack resolves its iOS dependency automatically during the Unity build. No
 manual Xcode framework or Apple system-framework configuration is required.
@@ -35,7 +33,8 @@ production attribution flow.
 
 If Xcode reports that `AppstackSDK` cannot be found:
 
-1. Confirm EDM4U is version 1.2.187 or newer.
-2. Delete the generated Xcode project and export it again from Unity.
-3. Check the Unity Console for dependency-resolution errors.
+1. Delete the generated Xcode project and export it again from Unity.
+2. Check the Unity Console for postprocessing errors.
+3. Confirm the generated Xcode project lists the `AppstackSDK` package product
+   on both the `UnityFramework` and application targets.
 4. Confirm the build machine can reach GitHub to resolve Swift packages.
