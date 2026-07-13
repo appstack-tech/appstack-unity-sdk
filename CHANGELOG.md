@@ -36,6 +36,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Added an Android post-generation hook that automatically merges the Unity
+  bridge keep rules into the generated `unityLibrary/proguard-unity.txt` file.
 - Initial Unity SDK aligned with Flutter and React Native strategy:
   - C# API: `AppstackSDK` (Configure, SendEvent, EnableAppleAdsAttribution, GetAppstackId, IsSdkDisabled, GetAttributionParams)
   - `EventType` enum matching other SDKs
