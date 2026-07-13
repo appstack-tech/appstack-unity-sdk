@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "com.appstack.unity-sdk": "file:__APPSTACK_PACKAGE_ROOT__",
+    "com.google.external-dependency-manager": "https://github.com/googlesamples/unity-jar-resolver.git?path=upm#v1.2.187",
+    "com.unity.modules.androidjni": "1.0.0"
+  }
+}

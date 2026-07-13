@@ -14,6 +14,8 @@ The repository root is the Unity Package Manager package root:
 - `Tests/Editor/` contains Unity Test Framework editor tests.
 - `Tests~/Native/` contains native bridge contract fixtures excluded from Unity
   import and release archives.
+- `Tests~/Integration/` contains the clean Unity player build fixture, also
+  excluded from Unity import and release archives.
 - `Samples~/` and `Documentation~/` contain integrator-facing package content.
 
 Keep all Unity `.meta` files committed. Generate a new unique GUID for every new
@@ -125,6 +127,12 @@ Run the deterministic native bridge contracts as described in
 published Android artifact, exercise it against recording JVM stubs, compile
 the production Swift bridge against the exact tagged XCFramework, run its Swift
 contract tests, and verify its exported C symbols.
+
+Run the Phase D player-build fixture as described in
+`Tests~/Integration/README.md`. It imports this repository into a clean Unity 6
+project, builds development and minified release Android players, exports and
+compiles an iOS player, and inspects the generated outputs for the required
+bridge, keep-rule, SPM, target-linking, and framework-embedding contracts.
 
 Android validation:
 
