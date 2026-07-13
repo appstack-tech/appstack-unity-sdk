@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -6,6 +7,33 @@ namespace Appstack
 {
     internal static class AppstackJson
     {
+        public static string SerializeObject(IDictionary<string, object> values)
+        {
+            if (values == null || values.Count == 0)
+            {
+                return "{}";
+            }
+
+            var builder = new StringBuilder();
+            builder.Append('{');
+            var isFirst = true;
+            foreach (var pair in values)
+            {
+                if (!isFirst)
+                {
+                    builder.Append(',');
+                }
+
+                isFirst = false;
+                AppendString(builder, pair.Key);
+                builder.Append(':');
+                AppendValue(builder, pair.Value);
+            }
+
+            builder.Append('}');
+            return builder.ToString();
+        }
+
         public static Dictionary<string, object> ParseObject(string json)
         {
             var result = new Dictionary<string, object>();
@@ -83,6 +111,51 @@ namespace Appstack
             if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var number))
                 return number;
             return value;
+        }
+
+        private static void AppendValue(StringBuilder builder, object value)
+        {
+            if (value == null)
+            {
+                builder.Append("null");
+                return;
+            }
+
+            if (value is string stringValue)
+            {
+                AppendString(builder, stringValue);
+                return;
+            }
+
+            if (value is bool boolValue)
+            {
+                builder.Append(boolValue ? "true" : "false");
+                return;
+            }
+
+            if (value is int || value is long || value is float || value is double)
+            {
+                builder.Append(Convert.ToString(value, CultureInfo.InvariantCulture));
+                return;
+            }
+
+            AppendString(builder, value.ToString());
+        }
+
+        private static void AppendString(StringBuilder builder, string value)
+        {
+            builder.Append('"');
+            if (!string.IsNullOrEmpty(value))
+            {
+                builder.Append(
+                    value
+                        .Replace("\\", "\\\\")
+                        .Replace("\"", "\\\"")
+                        .Replace("\n", "\\n")
+                        .Replace("\r", "\\r"));
+            }
+
+            builder.Append('"');
         }
 
         private static string ReadString(string json, ref int cursor)

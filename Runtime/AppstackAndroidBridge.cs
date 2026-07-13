@@ -12,32 +12,12 @@ namespace Appstack
         private const string CallbackInterfaceName =
             "com.appstack.unity.AppstackUnityBridge$AttributionParamsCallback";
 
-        private static readonly object CallbackLock = new object();
-        private static readonly Dictionary<int, PendingCallback> Callbacks =
-            new Dictionary<int, PendingCallback>();
+        private static readonly PendingRequestRegistry<Dictionary<string, object>> Requests =
+            new PendingRequestRegistry<Dictionary<string, object>>();
         private static readonly AttributionCallbackProxy NativeCallback =
             new AttributionCallbackProxy();
         private static readonly Lazy<AndroidJavaClass> UnityBridge =
             new Lazy<AndroidJavaClass>(() => new AndroidJavaClass(UnityBridgeClassName));
-        private static int nextRequestId;
-
-        private sealed class PendingCallback
-        {
-            public PendingCallback(
-                Action<Dictionary<string, object>> onSuccess,
-                Action<string> onError,
-                SynchronizationContext synchronizationContext)
-            {
-                OnSuccess = onSuccess;
-                OnError = onError;
-                SynchronizationContext = synchronizationContext;
-            }
-
-            public Action<Dictionary<string, object>> OnSuccess { get; }
-            public Action<string> OnError { get; }
-            public SynchronizationContext SynchronizationContext { get; }
-        }
-
         private sealed class AttributionCallbackProxy : AndroidJavaProxy
         {
             public AttributionCallbackProxy() : base(CallbackInterfaceName)
@@ -91,12 +71,10 @@ namespace Appstack
             Action<Dictionary<string, object>> onSuccess,
             Action<string> onError)
         {
-            var requestId = Interlocked.Increment(ref nextRequestId);
-            lock (CallbackLock)
-            {
-                Callbacks[requestId] =
-                    new PendingCallback(onSuccess, onError, SynchronizationContext.Current);
-            }
+            var requestId = Requests.Register(
+                onSuccess,
+                onError,
+                SynchronizationContext.Current);
 
             try
             {
@@ -113,36 +91,10 @@ namespace Appstack
 
         private static void CompleteRequest(int requestId, string json, string error)
         {
-            PendingCallback pending;
-            lock (CallbackLock)
-            {
-                if (!Callbacks.TryGetValue(requestId, out pending))
-                {
-                    return;
-                }
-
-                Callbacks.Remove(requestId);
-            }
-
-            void CompleteOnCapturedContext()
-            {
-                if (!string.IsNullOrEmpty(error))
-                {
-                    pending.OnError?.Invoke(error);
-                    return;
-                }
-
-                pending.OnSuccess?.Invoke(AppstackJson.ParseObject(json));
-            }
-
-            if (pending.SynchronizationContext != null)
-            {
-                pending.SynchronizationContext.Post(_ => CompleteOnCapturedContext(), null);
-            }
-            else
-            {
-                CompleteOnCapturedContext();
-            }
+            Requests.TryComplete(
+                requestId,
+                () => AppstackJson.ParseObject(json),
+                error);
         }
 
         private static AndroidJavaObject GetApplicationContext()
