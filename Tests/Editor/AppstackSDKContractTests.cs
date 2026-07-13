@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using UnityEditor.PackageManager;
 
 namespace Appstack.Tests
 {
@@ -18,6 +19,18 @@ namespace Appstack.Tests
         public void NativeEventNameDropsNameForStandardEvents(EventType eventType)
         {
             Assert.That(AppstackSDK.NativeEventName(eventType, "ignored"), Is.Null);
+        }
+
+        [Test]
+        public void WrapperVersionMatchesPackageManifest()
+        {
+            var packageInfo = PackageInfo.FindForAssembly(typeof(AppstackSDK).Assembly);
+
+            Assert.That(packageInfo, Is.Not.Null);
+            Assert.That(AppstackVersion.PackageVersion, Is.EqualTo(packageInfo.version));
+            Assert.That(
+                AppstackVersion.WrapperVersion,
+                Is.EqualTo("unity-" + packageInfo.version));
         }
     }
 }

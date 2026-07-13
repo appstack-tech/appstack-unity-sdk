@@ -12,7 +12,9 @@ The GitHub Actions workflow packages the root-level UPM contents. It:
 - Packages the root UPM contents rather than creating an `Assets/` tree.
 - Includes `LICENSE.md`, public documentation, runtime, editor, tests, samples,
   and all corresponding `.meta` files.
-- Excludes repository-only files and generated output.
+- Excludes repository-only files and generated output. The workflow allowlist
+  controls the GitHub ZIP, while `.npmignore` applies the same boundary to the
+  tarball built by OpenUPM.
 - Describes manual installation through Unity Package Manager.
 
 ## Before tagging
@@ -21,9 +23,10 @@ The GitHub Actions workflow packages the root-level UPM contents. It:
    stable native versions.
 2. Update native dependency pins in `Editor/AppstackDependencies.xml` and the
    public platform documentation together.
-3. Set the release version in the root `package.json`.
-4. Set `AppstackVersion.PackageVersion` to the same version. The editor tests
-   and release workflow reject a mismatch; both native bridges receive the
+3. Run `node scripts~/set-version.mjs <version>`. This updates the root
+   `package.json` and regenerates `Runtime/AppstackVersion.cs` together.
+4. Run `node scripts~/set-version.mjs --check <version>`. The editor tests and
+   release workflow run equivalent validation; both native bridges receive the
    resulting `unity-<version>` value from C#.
 5. Move relevant entries from `Unreleased` to a versioned changelog section.
 6. Confirm every package asset has a committed, unique `.meta` file.
@@ -44,7 +47,7 @@ repository checkout.
 
 ## Publish
 
-1. Commit the version and changelog changes.
+1. Commit the generated version files and changelog changes.
 2. Create a semantic version tag matching `package.json`, for example `1.0.0`.
 3. Push the commit and tag.
 4. Confirm the GitHub Actions release job succeeds and its archive passes a
