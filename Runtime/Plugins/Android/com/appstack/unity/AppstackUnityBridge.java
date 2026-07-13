@@ -20,7 +20,6 @@ import org.json.JSONObject;
 
 /** Stable Java boundary between Unity's JNI API and the native Android SDK. */
 public final class AppstackUnityBridge {
-    private static final String WRAPPER_VERSION = "unity-1.0.0";
     private static final String DEV_PROXY_URL_KEY = "APPSTACK_DEV_PROXY_URL";
 
     /** May run on any thread; C# posts to the captured context when available. */
@@ -34,6 +33,7 @@ public final class AppstackUnityBridge {
     public static void configure(
             Context context,
             String apiKey,
+            String wrapperVersion,
             int logLevel,
             String customerUserId) {
         String proxyUrl = readDevProxyUrl(context);
@@ -46,7 +46,7 @@ public final class AppstackUnityBridge {
         AppstackAttributionSdk.configureWrapper(
                 context,
                 apiKey,
-                WRAPPER_VERSION,
+                wrapperVersion,
                 nativeLogLevel(logLevel),
                 null,
                 emptyToNull(customerUserId));

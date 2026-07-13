@@ -34,7 +34,9 @@ must remain internal.
 
 Cross-platform behavior that must remain aligned:
 
-- Wrapper version: `unity-1.0.0`.
+- Wrapper version: `AppstackVersion.WrapperVersion`, currently `unity-1.0.0`.
+  C# passes this value to both native bridges, and an editor test verifies its
+  package-version component against `package.json`.
 - Log levels: `0=DEBUG`, `1=INFO`, `2=WARN`, `3=ERROR`; iOS maps warning to
   error.
 - Only `CUSTOM` events forward a caller-supplied event name.

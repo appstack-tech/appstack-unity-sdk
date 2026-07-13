@@ -43,7 +43,8 @@ namespace Appstack
         private static extern void AppstackUnityConfigure(
             string apiKey,
             int logLevel,
-            string customerUserId);
+            string customerUserId,
+            string wrapperVersion);
 
         [DllImport("__Internal")]
         private static extern void AppstackUnitySendEvent(
@@ -68,9 +69,13 @@ namespace Appstack
         [DllImport("__Internal")]
         private static extern void AppstackUnityFreeCString(IntPtr value);
 
-        public static void Configure(string apiKey, int logLevel, string customerUserId)
+        public static void Configure(
+            string apiKey,
+            int logLevel,
+            string customerUserId,
+            string wrapperVersion)
         {
-            AppstackUnityConfigure(apiKey, logLevel, customerUserId);
+            AppstackUnityConfigure(apiKey, logLevel, customerUserId, wrapperVersion);
         }
 
         public static void SendEvent(string eventType, string eventName, string parametersJson)

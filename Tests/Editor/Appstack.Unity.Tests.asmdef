@@ -2,7 +2,8 @@
   "name": "Appstack.Unity.Tests",
   "rootNamespace": "Appstack.Tests",
   "references": [
-    "Appstack.Unity"
+    "Appstack.Unity",
+    "Appstack.Unity.Editor"
   ],
   "includePlatforms": [
     "Editor"

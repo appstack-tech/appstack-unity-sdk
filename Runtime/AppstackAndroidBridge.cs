@@ -50,7 +50,11 @@ namespace Appstack
             }
         }
 
-        public static void Configure(string apiKey, int logLevel, string customerUserId)
+        public static void Configure(
+            string apiKey,
+            int logLevel,
+            string customerUserId,
+            string wrapperVersion)
         {
             using (var context = GetApplicationContext())
             {
@@ -58,6 +62,7 @@ namespace Appstack
                     "configure",
                     context,
                     apiKey,
+                    wrapperVersion,
                     logLevel,
                     customerUserId ?? string.Empty);
             }

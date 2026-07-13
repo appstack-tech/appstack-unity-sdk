@@ -3,22 +3,17 @@
 This document is for release maintainers. Integrators should use
 [README.md](README.md).
 
-## Current release blocker
+## Release artifact
 
-The existing `.github/workflows/release.yml` still packages the removed
-`Assets/AppstackSDK` layout. It must be updated for the root-level UPM package
-before creating a release tag.
+The GitHub Actions workflow packages the root-level UPM contents. It:
 
-The corrected workflow must:
-
-- Read the version from the root `package.json`.
-- Fail when the Git tag and package version differ.
-- Package the root UPM contents rather than creating an `Assets/` tree.
-- Include `LICENSE.md`, public documentation, runtime, editor, tests, samples,
+- Reads the version from the root `package.json`.
+- Fails when the Git tag and package version differ.
+- Packages the root UPM contents rather than creating an `Assets/` tree.
+- Includes `LICENSE.md`, public documentation, runtime, editor, tests, samples,
   and all corresponding `.meta` files.
-- Exclude repository-only files and generated output.
-- Describe manual installation through Unity Package Manager rather than
-  instructing users to unzip into `Assets/AppstackSDK`.
+- Excludes repository-only files and generated output.
+- Describes manual installation through Unity Package Manager.
 
 ## Before tagging
 
@@ -27,8 +22,9 @@ The corrected workflow must:
 2. Update native dependency pins in `Editor/AppstackDependencies.xml` and the
    public platform documentation together.
 3. Set the release version in the root `package.json`.
-4. Keep the native wrapper identifier in sync with the package version. For
-   version `1.0.0`, both bridges must report `unity-1.0.0`.
+4. Set `AppstackVersion.PackageVersion` to the same version. The editor tests
+   and release workflow reject a mismatch; both native bridges receive the
+   resulting `unity-<version>` value from C#.
 5. Move relevant entries from `Unreleased` to a versioned changelog section.
 6. Confirm every package asset has a committed, unique `.meta` file.
 

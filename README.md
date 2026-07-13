@@ -41,8 +41,8 @@ You can also add a local dependency to your project's `Packages/manifest.json`:
 
 ## Platform setup
 
-Install EDM4U 1.2.187 or newer before building. Appstack's native dependencies
-are then resolved automatically for iOS and Android.
+iOS requires EDM4U 1.2.187 or newer. EDM4U is recommended for Android, but
+Android projects can use the documented manual Gradle setup instead.
 
 - [iOS setup](Documentation~/iOS.md)
 - [Android setup](Documentation~/Android.md)
@@ -65,10 +65,17 @@ public sealed class AppstackInitializer : MonoBehaviour
     private void Start()
     {
 #if UNITY_IOS && !UNITY_EDITOR
-        AppstackSDK.Configure(iosApiKey);
-        AppstackSDK.EnableAppleAdsAttribution();
+        string apiKey = iosApiKey;
 #elif UNITY_ANDROID && !UNITY_EDITOR
-        AppstackSDK.Configure(androidApiKey);
+        string apiKey = androidApiKey;
+#else
+        string apiKey = "your-api-key";
+#endif
+
+        AppstackSDK.Configure(apiKey);
+
+#if UNITY_IOS && !UNITY_EDITOR
+        AppstackSDK.EnableAppleAdsAttribution();
 #endif
 
         AppstackSDK.SendEvent(

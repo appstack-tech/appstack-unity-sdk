@@ -12,9 +12,17 @@ namespace Appstack
         public static void Configure(string apiKey, int logLevel, string customerUserId)
         {
 #if UNITY_ANDROID && !UNITY_EDITOR
-            AppstackAndroidBridge.Configure(apiKey, logLevel, customerUserId);
+            AppstackAndroidBridge.Configure(
+                apiKey,
+                logLevel,
+                customerUserId,
+                AppstackVersion.WrapperVersion);
 #elif UNITY_IOS && !UNITY_EDITOR
-            AppstackIOSBridge.Configure(apiKey, logLevel, customerUserId);
+            AppstackIOSBridge.Configure(
+                apiKey,
+                logLevel,
+                customerUserId,
+                AppstackVersion.WrapperVersion);
 #else
             Debug.Log("[AppstackSDK] Configure is only supported on iOS and Android.");
 #endif

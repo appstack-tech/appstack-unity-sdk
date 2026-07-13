@@ -1,7 +1,6 @@
 import Foundation
 @_spi(AppstackInternal) @preconcurrency import AppstackSDK
 
-private let wrapperVersion = "unity-1.0.0"
 /// May run on any thread; C# posts to the captured context when available.
 public typealias AppstackUnityAttributionCallback = @convention(c) (
     Int32,
@@ -13,7 +12,8 @@ public typealias AppstackUnityAttributionCallback = @convention(c) (
 public func AppstackUnityConfigure(
     _ apiKeyPointer: UnsafePointer<CChar>?,
     _ logLevel: Int32,
-    _ customerUserIdPointer: UnsafePointer<CChar>?
+    _ customerUserIdPointer: UnsafePointer<CChar>?,
+    _ wrapperVersionPointer: UnsafePointer<CChar>?
 ) {
     guard let apiKey = string(from: apiKeyPointer), !apiKey.isEmpty else {
         return
@@ -29,7 +29,7 @@ public func AppstackUnityConfigure(
         apiKey: apiKey,
         logLevel: nativeLogLevel(from: logLevel),
         customerUserId: string(from: customerUserIdPointer),
-        wrapperVersion: wrapperVersion
+        wrapperVersion: string(from: wrapperVersionPointer)
     )
 }
 
@@ -40,10 +40,11 @@ public func AppstackUnitySendEvent(
     _ parametersJsonPointer: UnsafePointer<CChar>?
 ) {
     let eventTypeString = string(from: eventTypePointer) ?? "CUSTOM"
-    let eventType = EventType(rawValue: eventTypeString.uppercased()) ?? .CUSTOM
+    let normalizedEventType = eventTypeString.uppercased()
+    let eventType = EventType(rawValue: normalizedEventType) ?? .CUSTOM
     let suppliedName = string(from: eventNamePointer)
     let eventName = eventType == .CUSTOM
-        ? (suppliedName ?? (eventTypeString == "CUSTOM" ? nil : eventTypeString))
+        ? (suppliedName ?? (normalizedEventType == "CUSTOM" ? nil : eventTypeString))
         : nil
 
     AppstackAttributionSdk.shared.sendEvent(
