@@ -1,8 +1,13 @@
 # Appstack Unity SDK
 
-The Appstack Unity SDK is configured manually from application code. Install
-the package, resolve its Android Maven and iOS Swift Package dependencies with
-EDM4U, then call `AppstackSDK.Configure` before sending events.
+Use Appstack to track standard and custom events, revenue, and mobile attribution
+from Unity applications.
 
-See the repository [README](../README.md) and [usage guide](../USAGE.md) for the
-current public API and platform setup.
+## Get started
+
+1. [Install the package and configure the SDK](../README.md).
+2. Complete the setup for [iOS](iOS.md) and [Android](Android.md).
+3. Follow the [usage guide](../USAGE.md) for events and attribution data.
+
+You can also import the **Basic Integration** sample from the Unity Package
+Manager.

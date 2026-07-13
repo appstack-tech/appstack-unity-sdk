@@ -1,139 +1,144 @@
 # Appstack Unity SDK
 
-Track events and revenue with Apple Search Ads attribution in your Unity app. Same API strategy as the [Flutter](https://github.com/appstack-tech/appstack-flutter-sdk) and [React Native](https://github.com/appstack-tech/react-native-appstack-sdk) SDKs.
+Track events and revenue, enable Apple Ads attribution on iOS, and retrieve
+attribution data from Unity applications.
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-## Overview
-
-The Appstack Unity SDK lets you:
-
-- Track standardized and custom events
-- Track revenue events with currency (for ROAS / optimization)
-- Enable Apple Ads attribution on iOS
-- Retrieve the Appstack installation ID and attribution parameters
-
 ## Requirements
 
-- **Unity:** Unity 6 (`6000.0`) or newer
-- **iOS:** 15.0+ (required by the Appstack iOS SDK)
-- **Android:** minSdk 21, targetSdk 34+, Java 17+
-- **EDM4U:** 1.2.187 or newer for iOS Swift Package Manager support
+- Unity 6 (`6000.0`) or newer
+- iOS 15.0 or newer
+- Android API level 21 or newer, target API level 34+, and Java 17+
+- External Dependency Manager for Unity (EDM4U) 1.2.187 or newer for iOS;
+  recommended for Android
 
 ## Installation
 
-### Option A: Unity Package Manager (OpenUPM)
+### OpenUPM
 
-1. Add the **OpenUPM** scoped registry: [OpenUPM – Getting started](https://openupm.com/docs/getting-started.html) (add `https://package.openupm.com` as a scoped registry for `com.appstack`).
-2. In Unity: **Window → Package Manager → + → Add package by name** → `com.appstack.unity-sdk`.
-3. Complete **iOS** and **Android** setup below.
+1. Add `https://package.openupm.com` as a scoped registry for `com.appstack`.
+2. In Unity, open **Window → Package Manager**.
+3. Select **+ → Add package by name** and enter `com.appstack.unity-sdk`.
 
-### Option B: Local package
+See the [OpenUPM getting-started guide](https://openupm.com/docs/getting-started.html)
+for scoped-registry instructions.
 
-1. Clone this repository and add it from Unity Package Manager with **Add package from disk**, selecting its root `package.json`, or use a `file:` dependency in the consuming project's manifest.
-2. Complete **iOS** and **Android** setup below.
+### Local package
 
-### iOS setup
+Clone this repository, then select **Window → Package Manager → + → Add package
+from disk** and choose the repository's root `package.json`.
 
-Resolve the Appstack iOS Swift package with EDM4U 1.2.187 or newer and configure iOS.
-See [Documentation~/iOS.md](Documentation~/iOS.md).
+You can also add a local dependency to your project's `Packages/manifest.json`:
 
-### Android setup
+```json
+{
+  "dependencies": {
+    "com.appstack.unity-sdk": "file:../appstack-unity-sdk"
+  }
+}
+```
 
-Add the Appstack Android SDK dependency (EDM4U or manual Gradle).  
-See [Documentation~/Android.md](Documentation~/Android.md).
+## Platform setup
 
-**Registering on OpenUPM (one-time)**  
-To have the package appear in the OpenUPM registry, submit it once via the [OpenUPM add form](https://openupm.com/packages/add/) or by opening a PR to [openupm/openupm](https://github.com/openupm/openupm) with the metadata from [`.openupm/package-metadata.yml`](.openupm/package-metadata.yml). After that, new Git tags will be built and published automatically.
+Install EDM4U 1.2.187 or newer before building. Appstack's native dependencies
+are then resolved automatically for iOS and Android.
 
-## Quick Start
+- [iOS setup](Documentation~/iOS.md)
+- [Android setup](Documentation~/Android.md)
+
+## Quick start
+
+Call `Configure` once during application startup and before using other SDK
+methods.
 
 ```csharp
+using System.Collections.Generic;
 using Appstack;
 using UnityEngine;
 
-public class AppstackInitializer : MonoBehaviour
+public sealed class AppstackInitializer : MonoBehaviour
 {
-    async void Start()
+    [SerializeField] private string iosApiKey;
+    [SerializeField] private string androidApiKey;
+
+    private void Start()
     {
-        string apiKey = Application.platform == RuntimePlatform.IPhonePlayer
-            ? "your-ios-api-key"
-            : "your-android-api-key";
-
-        AppstackSDK.Configure(apiKey);
-
 #if UNITY_IOS && !UNITY_EDITOR
+        AppstackSDK.Configure(iosApiKey);
         AppstackSDK.EnableAppleAdsAttribution();
+#elif UNITY_ANDROID && !UNITY_EDITOR
+        AppstackSDK.Configure(androidApiKey);
 #endif
 
-        // Send events
-        AppstackSDK.SendEvent(EventType.SIGN_UP);
-        AppstackSDK.SendEvent(EventType.PURCHASE, parameters: new Dictionary<string, object>
-        {
-            { "revenue", 29.99 },
-            { "currency", "USD" }
-        });
+        AppstackSDK.SendEvent(
+            EventType.PURCHASE,
+            parameters: new Dictionary<string, object>
+            {
+                { "revenue", 29.99 },
+                { "currency", "USD" }
+            });
     }
 }
 ```
 
-## API (aligned with Flutter / React Native)
+## Public API
 
-### `AppstackSDK.Configure(apiKey, logLevel?, customerUserId?)`
+### Configure
 
-Initializes the SDK. Must be called before any other methods.
+```csharp
+AppstackSDK.Configure(
+    apiKey: "your-platform-api-key",
+    logLevel: 1,
+    customerUserId: "optional-user-id"
+);
+```
 
-- **apiKey** – Your platform-specific API key from the Appstack dashboard.
-- **logLevel** – 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR; default `1`. (iOS has no dedicated WARN tier, so 2 behaves like 3 there.)
-- **customerUserId** – Optional customer user ID.
+`logLevel` accepts `0=DEBUG`, `1=INFO`, `2=WARN`, and `3=ERROR`. iOS has no
+dedicated warning level, so `WARN` behaves like `ERROR` there.
 
-### `AppstackSDK.SendEvent(eventType, eventName?, parameters?)`
+### Send standard and custom events
 
-Sends an event.
+```csharp
+AppstackSDK.SendEvent(EventType.LOGIN);
 
-- **eventType** – Use the `EventType` enum (e.g. `EventType.PURCHASE`, `EventType.CUSTOM`).
-- **eventName** – Required when `eventType == EventType.CUSTOM`; ignored otherwise.
-- **parameters** – Optional `Dictionary<string, object>` (e.g. `revenue`, `currency`).
+AppstackSDK.SendEvent(
+    EventType.CUSTOM,
+    eventName: "level_completed",
+    parameters: new Dictionary<string, object> { { "level", 12 } }
+);
+```
 
-### `AppstackSDK.EnableAppleAdsAttribution()`
+An `eventName` is required for `CUSTOM` events and ignored for standard events.
 
-Enables Apple Search Ads attribution (iOS only). No-op on Android.
+### Retrieve the Appstack ID and attribution parameters
 
-### `AppstackSDK.GetAppstackId()`
+```csharp
+string appstackId = AppstackSDK.GetAppstackId();
 
-Returns the Appstack installation ID string.
+AppstackSDK.GetAttributionParams(
+    onSuccess: parameters => Debug.Log($"Attribution: {parameters.Count} values"),
+    onError: error => Debug.LogError($"Attribution error: {error}")
+);
+```
 
-### `AppstackSDK.IsSdkDisabled()`
+### Check SDK status
 
-Returns `true` if the SDK is disabled (e.g. invalid API key).
+```csharp
+bool disabled = AppstackSDK.IsSdkDisabled();
+```
 
-### `AppstackSDK.GetAttributionParams(onSuccess, onError?)`
-
-Retrieves attribution parameters asynchronously.  
-`onSuccess(Dictionary<string, object>)` and optional `onError(string)`.
-
-### Event types
-
-Same set as Flutter/React Native:  
-`INSTALL`, `LOGIN`, `SIGN_UP`, `REGISTER`, `PURCHASE`, `ADD_TO_CART`, `ADD_TO_WISHLIST`, `INITIATE_CHECKOUT`, `START_TRIAL`, `SUBSCRIBE`, `LEVEL_START`, `LEVEL_COMPLETE`, `TUTORIAL_COMPLETE`, `SEARCH`, `VIEW_ITEM`, `VIEW_CONTENT`, `SHARE`, `CUSTOM`.
-
-## Documentation
+## More documentation
 
 - [Usage guide](USAGE.md)
 - [iOS setup](Documentation~/iOS.md)
 - [Android setup](Documentation~/Android.md)
+- Import the **Basic Integration** sample from the Unity Package Manager
 
-## Releasing (CD)
-
-Releases use **GitHub Actions** and **OpenUPM** (UPM).
-
-1. **Update version:** Set `version` in the root `package.json` and update `CHANGELOG.md`.
-2. **Tag and push:** e.g. `git tag 1.0.0 && git push origin 1.0.0`
-3. **Workflow** [`.github/workflows/release.yml`](.github/workflows/release.yml):
-   - Verifies `package.json` version matches the tag
-   - Creates a **GitHub Release** with a zip for manual install
-   - **OpenUPM** builds from the same tag once the package is [registered on OpenUPM](https://openupm.com/packages/add/) (one-time: submit the repo via their form or a PR to [openupm/openupm](https://github.com/openupm/openupm) with the package metadata; see [`.openupm/package-metadata.yml`](.openupm/package-metadata.yml)).
+For package architecture and contribution guidance, see
+[DEVELOPMENT.md](DEVELOPMENT.md). Release maintainers should use
+[RELEASING.md](RELEASING.md).
 
 ## License
 
-MIT – see [LICENSE.md](LICENSE.md).
+MIT — see [LICENSE.md](LICENSE.md).

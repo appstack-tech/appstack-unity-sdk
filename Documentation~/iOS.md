@@ -1,26 +1,41 @@
-# iOS Setup for Appstack Unity SDK
+# iOS setup
 
-## 1. Resolve the Appstack iOS SDK
+## Requirements
 
-Install EDM4U 1.2.187 or newer and let it process
-`Editor/AppstackDependencies.xml`. EDM4U added Swift Package Manager support in
-1.2.187. The package declares the `AppstackSDK` Swift package product from
-`ios-appstack-sdk` at version `4.4.0-rc0`.
+- Unity 6 (`6000.0`) or newer
+- iOS 15.0 or newer
+- External Dependency Manager for Unity (EDM4U) 1.2.187 or newer
 
-This SPM integration is the supported path for the first Unity SDK release and
-requires Unity 6. Older-Unity fallback distribution is not part of this release.
+## Configure the project
 
-## 2. Swift bridge
+1. Install EDM4U 1.2.187 or newer in your Unity project.
+2. Open **Edit → Project Settings → Player → iOS**.
+3. Set **Target minimum iOS Version** to `15.0` or newer.
+4. Build the iOS player normally.
 
-The package uses direct C-ABI exports from `AppstackUnityBridge.swift`; it does
-not depend on Unity's generated Swift header name.
+Appstack resolves its iOS dependency automatically during the Unity build. No
+manual Xcode framework or Apple system-framework configuration is required.
 
-## 3. Apple Ads attribution
+## Enable Apple Ads attribution
 
-Call `AppstackSDK.EnableAppleAdsAttribution()` after configuration. Appstack
-uses the AdServices token flow and does not require
-`NSAdvertisingAttributionReportEndpoint`.
+Call this after configuring the SDK:
 
-## 4. Minimum iOS version
+```csharp
+#if UNITY_IOS && !UNITY_EDITOR
+AppstackSDK.Configure("your-ios-api-key");
+AppstackSDK.EnableAppleAdsAttribution();
+#endif
+```
 
-Set your Unity iOS build minimum version (Player Settings → Target minimum iOS Version) to **iOS 15.0** or higher. The Appstack iOS SDK declares iOS 15 as its minimum platform; builds targeting lower versions will fail to compile the Swift bridge.
+Apple Ads attribution must be tested with an App Store or TestFlight
+installation; simulator and ordinary development installs do not represent the
+production attribution flow.
+
+## Troubleshooting
+
+If Xcode reports that `AppstackSDK` cannot be found:
+
+1. Confirm EDM4U is version 1.2.187 or newer.
+2. Delete the generated Xcode project and export it again from Unity.
+3. Check the Unity Console for dependency-resolution errors.
+4. Confirm the build machine can reach GitHub to resolve Swift packages.

@@ -1,12 +1,14 @@
 # Appstack Unity SDK – Usage Guide
 
-This guide matches the patterns used in the [Flutter](https://github.com/appstack-tech/appstack-flutter-sdk) and [React Native](https://github.com/appstack-tech/react-native-appstack-sdk) SDKs.
+This guide covers SDK initialization, event tracking, revenue recommendations,
+and attribution data.
 
 ## SDK initialization
 
 Call `Configure` once at startup (e.g. in a bootstrap scene or main menu).
 
 ```csharp
+using System.Collections.Generic;
 using Appstack;
 using UnityEngine;
 
@@ -103,9 +105,15 @@ AppstackSDK.GetAttributionParams(
 );
 ```
 
+Callbacks are delivered on the synchronization context captured when
+`GetAttributionParams` is called, when one is available. Calling it from Unity's
+main thread allows the callbacks to safely update Unity objects.
+
 ## Editor and unsupported platforms
 
-In the Unity Editor and on non‑iOS/Android platforms, SDK methods are no-ops or return safe defaults (e.g. `GetAppstackId()` returns `null`, `IsSdkDisabled()` returns `true`). You can keep the same code paths; they will not call native code.
+In the Unity Editor and on non-iOS/Android platforms, SDK methods are no-ops or
+return safe defaults. For example, `GetAppstackId()` returns `null` and
+`IsSdkDisabled()` returns `true`. These platforms do not call native code.
 
 ## Event type reference
 
