@@ -91,7 +91,7 @@ Initializes the SDK. Must be called before any other methods.
 Sends an event.
 
 - **eventType** – Use the `EventType` enum (e.g. `EventType.PURCHASE`, `EventType.CUSTOM`).
-- **eventName** – Required when `eventType == EventType.CUSTOM`; optional otherwise.
+- **eventName** – Required when `eventType == EventType.CUSTOM`; ignored otherwise.
 - **parameters** – Optional `Dictionary<string, object>` (e.g. `revenue`, `currency`).
 
 ### `AppstackSDK.EnableAppleAdsAttribution()`

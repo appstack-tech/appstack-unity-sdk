@@ -71,7 +71,7 @@ namespace Appstack
         /// Send an event with optional parameters.
         /// </summary>
         /// <param name="eventType">Event type from the EventType enum (required).</param>
-        /// <param name="eventName">Event name for custom events (optional; required when eventType is CUSTOM).</param>
+        /// <param name="eventName">Event name required for CUSTOM events; ignored for standard events.</param>
         /// <param name="parameters">Optional parameters (e.g. revenue, currency).</param>
         public static void SendEvent(
             EventType eventType,
@@ -85,7 +85,10 @@ namespace Appstack
             var parametersJson = ParametersToJson(parameters);
             try
             {
-                AppstackSDKNative.SendEvent(eventTypeStr, eventName ?? "", parametersJson);
+                AppstackSDKNative.SendEvent(
+                    eventTypeStr,
+                    NativeEventName(eventType, eventName) ?? "",
+                    parametersJson);
             }
             catch (Exception e)
             {
@@ -167,6 +170,11 @@ namespace Appstack
                 Debug.LogError($"[AppstackSDK] GetAttributionParams failed: {e.Message}");
                 onError?.Invoke(e.Message);
             }
+        }
+
+        internal static string NativeEventName(EventType eventType, string eventName)
+        {
+            return eventType == EventType.CUSTOM ? eventName : null;
         }
 
         private static string ParametersToJson(Dictionary<string, object> parameters)

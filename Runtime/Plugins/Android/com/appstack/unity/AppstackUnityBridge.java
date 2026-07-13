@@ -54,9 +54,10 @@ public final class AppstackUnityBridge {
             String eventType,
             String eventName,
             String parametersJson) {
+        EventType nativeType = nativeEventType(eventType);
         AppstackAttributionSdk.sendEvent(
-                nativeEventType(eventType),
-                emptyToNull(eventName),
+                nativeType,
+                nativeType == EventType.CUSTOM ? emptyToNull(eventName) : null,
                 parametersFromJson(parametersJson));
     }
 
