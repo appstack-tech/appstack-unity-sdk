@@ -14,6 +14,16 @@ namespace Appstack
             new Dictionary<int, PendingRequest>();
         private int nextRequestId;
 
+        internal PendingRequestRegistry(int lastRequestId = 0)
+        {
+            if (lastRequestId < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(lastRequestId));
+            }
+
+            nextRequestId = lastRequestId;
+        }
+
         private sealed class PendingRequest
         {
             public PendingRequest(
@@ -47,14 +57,21 @@ namespace Appstack
             Action<string> onError,
             SynchronizationContext synchronizationContext)
         {
-            var requestId = Interlocked.Increment(ref nextRequestId);
             lock (gate)
             {
-                requests[requestId] =
-                    new PendingRequest(onSuccess, onError, synchronizationContext);
-            }
+                var requestId = nextRequestId;
+                do
+                {
+                    requestId = requestId == int.MaxValue ? 1 : requestId + 1;
+                }
+                while (requests.ContainsKey(requestId));
 
-            return requestId;
+                nextRequestId = requestId;
+                requests.Add(
+                    requestId,
+                    new PendingRequest(onSuccess, onError, synchronizationContext));
+                return requestId;
+            }
         }
 
         public bool TryComplete(

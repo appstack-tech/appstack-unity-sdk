@@ -117,6 +117,9 @@ AppstackSDK.SendEvent(
 ```
 
 An `eventName` is required for `CUSTOM` events and ignored for standard events.
+Event parameters may contain strings, Booleans, finite numeric values, nulls,
+nested string-keyed dictionaries, and arrays. Unsupported objects and non-finite
+numbers such as `NaN` or infinity are rejected before reaching the native SDK.
 
 ### Retrieve the Appstack ID and attribution parameters
 

@@ -67,6 +67,11 @@ AppstackSDK.SendEvent(
 );
 ```
 
+Event parameters may contain strings, Booleans, finite numeric values, nulls,
+nested string-keyed dictionaries, and arrays. Unsupported objects and non-finite
+numbers such as `NaN` or infinity throw an `ArgumentException` before the event is
+sent.
+
 ### Revenue (EAC recommendations)
 
 For any revenue event, send `revenue` (or `price`) and `currency`:

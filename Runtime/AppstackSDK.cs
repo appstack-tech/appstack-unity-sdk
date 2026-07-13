@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 namespace Appstack
@@ -76,7 +77,10 @@ namespace Appstack
         /// </summary>
         /// <param name="eventType">Event type from the EventType enum (required).</param>
         /// <param name="eventName">Event name required for CUSTOM events; ignored for standard events.</param>
-        /// <param name="parameters">Optional parameters (e.g. revenue, currency).</param>
+        /// <param name="parameters">Optional JSON-compatible parameters. Supports strings,
+        /// Booleans, finite numbers, nulls, nested string-keyed dictionaries, and arrays.</param>
+        /// <exception cref="ArgumentException">Thrown for missing custom event names or
+        /// parameter values that cannot be represented as JSON.</exception>
         public static void SendEvent(
             EventType eventType,
             string eventName = null,
@@ -161,14 +165,31 @@ namespace Appstack
             if (onSuccess == null)
                 throw new ArgumentNullException(nameof(onSuccess));
 
+            var completed = 0;
+            void CompleteSuccess(Dictionary<string, object> parameters)
+            {
+                if (Interlocked.Exchange(ref completed, 1) == 0)
+                {
+                    onSuccess(parameters);
+                }
+            }
+
+            void CompleteError(string error)
+            {
+                if (Interlocked.Exchange(ref completed, 1) == 0)
+                {
+                    onError?.Invoke(error);
+                }
+            }
+
             try
             {
-                AppstackSDKNative.GetAttributionParams(onSuccess, onError ?? (_ => { }));
+                AppstackSDKNative.GetAttributionParams(CompleteSuccess, CompleteError);
             }
             catch (Exception e)
             {
                 Debug.LogError($"[AppstackSDK] GetAttributionParams failed: {e.Message}");
-                onError?.Invoke(e.Message);
+                CompleteError(e.Message);
             }
         }
 
