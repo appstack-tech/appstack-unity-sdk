@@ -8,20 +8,17 @@ namespace Appstack
 {
     internal static class AppstackAndroidBridge
     {
-        private const string SdkClassName = "com.appstack.attribution.AppstackAttributionSdk";
-        private const string EventTypeClassName = "com.appstack.attribution.EventType";
-        private const string LogLevelClassName = "com.appstack.attribution.LogLevel";
         private const string UnityBridgeClassName = "com.appstack.unity.AppstackUnityBridge";
         private const string CallbackInterfaceName =
             "com.appstack.unity.AppstackUnityBridge$AttributionParamsCallback";
-        private const string WrapperVersion = "unity-1.0.0";
-        private const int GetMetaDataFlag = 128;
 
         private static readonly object CallbackLock = new object();
         private static readonly Dictionary<int, PendingCallback> Callbacks =
             new Dictionary<int, PendingCallback>();
         private static readonly AttributionCallbackProxy NativeCallback =
             new AttributionCallbackProxy();
+        private static readonly Lazy<AndroidJavaClass> UnityBridge =
+            new Lazy<AndroidJavaClass>(() => new AndroidJavaClass(UnityBridgeClassName));
         private static int nextRequestId;
 
         private sealed class PendingCallback
@@ -55,57 +52,34 @@ namespace Appstack
 
         public static void Configure(string apiKey, int logLevel, string customerUserId)
         {
-            using (var sdk = new AndroidJavaClass(SdkClassName))
             using (var context = GetApplicationContext())
-            using (var nativeLogLevel = GetNativeLogLevel(logLevel))
             {
-                var proxyUrl = ReadDevProxyUrl(context);
-                if (!string.IsNullOrWhiteSpace(proxyUrl))
-                {
-                    sdk.CallStatic("setProxyUrl", proxyUrl);
-                }
-
-                // The pinned SDK exposes this wrapper-only API. Do not fall back to the
-                // public configure method because that would omit wrapper attribution.
-                sdk.CallStatic(
-                    "configureWrapper",
+                UnityBridge.Value.CallStatic(
+                    "configure",
                     context,
                     apiKey,
-                    WrapperVersion,
-                    nativeLogLevel,
-                    null,
-                    string.IsNullOrWhiteSpace(customerUserId) ? null : customerUserId);
+                    logLevel,
+                    customerUserId ?? string.Empty);
             }
         }
 
         public static void SendEvent(string eventType, string eventName, string parametersJson)
         {
-            using (var sdk = new AndroidJavaClass(SdkClassName))
-            using (var nativeEventType = GetNativeEventType(eventType))
-            using (var parameters = JsonToJavaMap(parametersJson))
-            {
-                sdk.CallStatic(
-                    "sendEvent",
-                    nativeEventType,
-                    string.IsNullOrWhiteSpace(eventName) ? null : eventName,
-                    parameters);
-            }
+            UnityBridge.Value.CallStatic(
+                "sendEvent",
+                eventType,
+                eventName ?? string.Empty,
+                parametersJson ?? "{}");
         }
 
         public static string GetAppstackId()
         {
-            using (var sdk = new AndroidJavaClass(SdkClassName))
-            {
-                return sdk.CallStatic<string>("getAppstackId");
-            }
+            return UnityBridge.Value.CallStatic<string>("getAppstackId");
         }
 
         public static bool IsSdkDisabled()
         {
-            using (var sdk = new AndroidJavaClass(SdkClassName))
-            {
-                return sdk.CallStatic<bool>("isSdkDisabled");
-            }
+            return UnityBridge.Value.CallStatic<bool>("isSdkDisabled");
         }
 
         public static void GetAttributionParams(
@@ -121,10 +95,10 @@ namespace Appstack
 
             try
             {
-                using (var bridge = new AndroidJavaClass(UnityBridgeClassName))
-                {
-                    bridge.CallStatic("awaitAttributionParams", requestId, NativeCallback);
-                }
+                UnityBridge.Value.CallStatic(
+                    "awaitAttributionParams",
+                    requestId,
+                    NativeCallback);
             }
             catch (Exception exception)
             {
@@ -177,71 +151,6 @@ namespace Appstack
                 }
 
                 return activity.Call<AndroidJavaObject>("getApplicationContext");
-            }
-        }
-
-        private static string ReadDevProxyUrl(AndroidJavaObject context)
-        {
-            try
-            {
-                using (var packageManager = context.Call<AndroidJavaObject>("getPackageManager"))
-                using (var applicationInfo = packageManager.Call<AndroidJavaObject>(
-                           "getApplicationInfo",
-                           context.Call<string>("getPackageName"),
-                           GetMetaDataFlag))
-                using (var metadata = applicationInfo.Get<AndroidJavaObject>("metaData"))
-                {
-                    return metadata?.Call<string>("getString", "APPSTACK_DEV_PROXY_URL");
-                }
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
-
-        private static AndroidJavaObject GetNativeLogLevel(int logLevel)
-        {
-            var name = logLevel switch
-            {
-                0 => "DEBUG",
-                1 => "INFO",
-                2 => "WARN",
-                3 => "ERROR",
-                _ => "INFO",
-            };
-
-            using (var logLevelClass = new AndroidJavaClass(LogLevelClassName))
-            {
-                return logLevelClass.GetStatic<AndroidJavaObject>(name);
-            }
-        }
-
-        private static AndroidJavaObject GetNativeEventType(string eventType)
-        {
-            using (var eventTypeClass = new AndroidJavaClass(EventTypeClassName))
-            {
-                try
-                {
-                    return eventTypeClass.GetStatic<AndroidJavaObject>(eventType);
-                }
-                catch (AndroidJavaException)
-                {
-                    return eventTypeClass.GetStatic<AndroidJavaObject>("CUSTOM");
-                }
-            }
-        }
-
-        private static AndroidJavaObject JsonToJavaMap(string json)
-        {
-            if (string.IsNullOrWhiteSpace(json) || json == "{}")
-            {
-                return null;
-            }
-
-            using (var bridge = new AndroidJavaClass(UnityBridgeClassName))
-            {
-                return bridge.CallStatic<AndroidJavaObject>("parametersFromJson", json);
             }
         }
     }

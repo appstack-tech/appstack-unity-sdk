@@ -36,20 +36,13 @@ namespace Appstack.Editor
 
             var mainTarget = project.GetUnityMainTargetGuid();
             var frameworkTarget = project.GetUnityFrameworkTargetGuid();
-            ConfigureSwift(project, mainTarget);
-            ConfigureSwift(project, frameworkTarget);
-            AddSwiftBridge(project, frameworkTarget, packageInfo.resolvedPath);
-            AddSystemFrameworks(project, frameworkTarget);
-            project.WriteToFile(projectPath);
-        }
-
-        private static void ConfigureSwift(PBXProject project, string targetGuid)
-        {
-            project.SetBuildProperty(targetGuid, "SWIFT_VERSION", "5.0");
+            project.SetBuildProperty(frameworkTarget, "SWIFT_VERSION", "5.0");
             project.SetBuildProperty(
-                targetGuid,
+                mainTarget,
                 "ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES",
                 "YES");
+            AddSwiftBridge(project, frameworkTarget, packageInfo.resolvedPath);
+            project.WriteToFile(projectPath);
         }
 
         private static void AddSwiftBridge(
@@ -70,17 +63,6 @@ namespace Appstack.Editor
                 ? project.AddFile(sourcePath, projectPath)
                 : existingGuid;
             project.AddFileToBuild(targetGuid, fileGuid);
-        }
-
-        private static void AddSystemFrameworks(PBXProject project, string targetGuid)
-        {
-            project.AddFrameworkToProject(targetGuid, "AdServices.framework", false);
-            project.AddFrameworkToProject(targetGuid, "AdSupport.framework", false);
-            project.AddFrameworkToProject(targetGuid, "AppTrackingTransparency.framework", false);
-            project.AddFrameworkToProject(targetGuid, "Network.framework", false);
-            project.AddFrameworkToProject(targetGuid, "Security.framework", false);
-            project.AddFrameworkToProject(targetGuid, "StoreKit.framework", false);
-            project.AddFrameworkToProject(targetGuid, "WebKit.framework", false);
         }
     }
 }
