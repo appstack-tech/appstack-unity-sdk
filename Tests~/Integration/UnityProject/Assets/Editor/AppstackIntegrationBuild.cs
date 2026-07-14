@@ -7,6 +7,9 @@ using UnityEditor.Build.Reporting;
 using UnityEditor.PackageManager;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+#if UNITY_IOS
+using UnityEditor.iOS.Xcode;
+#endif
 
 internal static class AppstackIntegrationBuild
 {
@@ -36,7 +39,7 @@ internal static class AppstackIntegrationBuild
     public static void BuildAndroidPlayers()
     {
         ValidateImport();
-        ConfigureSharedProject();
+        ConfigureSharedProject(typeof(AppstackIntegrationProbe), "tech.appstack.unity.phased");
         SwitchTarget(BuildTargetGroup.Android, BuildTarget.Android);
 
         PlayerSettings.SetScriptingBackend(
@@ -66,7 +69,7 @@ internal static class AppstackIntegrationBuild
     public static void ExportIOSPlayer()
     {
         ValidateImport();
-        ConfigureSharedProject();
+        ConfigureSharedProject(typeof(AppstackIntegrationProbe), "tech.appstack.unity.phased");
         SwitchTarget(BuildTargetGroup.iOS, BuildTarget.iOS);
 
         PlayerSettings.SetScriptingBackend(
@@ -82,23 +85,77 @@ internal static class AppstackIntegrationBuild
         ValidateIOSExport(output);
     }
 
-    private static void ConfigureSharedProject()
+    public static void BuildAndroidRuntimePlayer()
     {
+        ValidateImport();
+        ConfigureSharedProject(typeof(AppstackRuntimeProbe), "tech.appstack.unity.phasee");
+        SwitchTarget(BuildTargetGroup.Android, BuildTarget.Android);
+
+        PlayerSettings.SetScriptingBackend(
+            NamedBuildTarget.Android,
+            ScriptingImplementation.IL2CPP);
+        PlayerSettings.SetManagedStrippingLevel(
+            NamedBuildTarget.Android,
+            ManagedStrippingLevel.Medium);
+        PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+        PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
+        EditorUserBuildSettings.buildAppBundle = false;
+
+        Build(
+            BuildTarget.Android,
+            "Builds/PhaseE/Android/appstack-phase-e.apk",
+            BuildOptions.Development | BuildOptions.CleanBuildCache);
+    }
+
+#if UNITY_IOS
+    public static void ExportIOSSimulatorRuntimePlayer()
+    {
+        ValidateImport();
+        ConfigureSharedProject(typeof(AppstackRuntimeProbe), "tech.appstack.unity.phasee");
+        SwitchTarget(BuildTargetGroup.iOS, BuildTarget.iOS);
+
+        PlayerSettings.SetScriptingBackend(
+            NamedBuildTarget.iOS,
+            ScriptingImplementation.IL2CPP);
+        PlayerSettings.SetManagedStrippingLevel(
+            NamedBuildTarget.iOS,
+            ManagedStrippingLevel.Medium);
+        PlayerSettings.iOS.targetOSVersionString = "15.0";
+        PlayerSettings.iOS.sdkVersion = iOSSdkVersion.SimulatorSDK;
+        var simulatorArchitecture = Environment.GetEnvironmentVariable(
+            "APPSTACK_PHASE_E_IOS_ARCH");
+        Require(
+            simulatorArchitecture == "arm64" || simulatorArchitecture == "x86_64",
+            "APPSTACK_PHASE_E_IOS_ARCH must be arm64 or x86_64.");
+        PlayerSettings.iOS.simulatorSdkArchitecture = simulatorArchitecture == "arm64"
+            ? AppleMobileArchitectureSimulator.ARM64
+            : AppleMobileArchitectureSimulator.X86_64;
+
+        const string output = "Builds/PhaseE/iOS";
+        Build(BuildTarget.iOS, output, BuildOptions.Development | BuildOptions.CleanBuildCache);
+        ConfigureRuntimeInfoPlist(output);
+        ValidateIOSExport(output);
+    }
+#endif
+
+    private static void ConfigureSharedProject(Type probeType, string applicationIdentifier)
+    {
+        var phase = probeType == typeof(AppstackRuntimeProbe) ? "E" : "D";
         PlayerSettings.companyName = "Appstack";
-        PlayerSettings.productName = "Appstack Phase D";
+        PlayerSettings.productName = $"Appstack Phase {phase}";
         PlayerSettings.bundleVersion = "1.0.0";
         PlayerSettings.SetApplicationIdentifier(
             NamedBuildTarget.Android,
-            "tech.appstack.unity.phased");
+            applicationIdentifier);
         PlayerSettings.SetApplicationIdentifier(
             NamedBuildTarget.iOS,
-            "tech.appstack.unity.phased");
+            applicationIdentifier);
 
         var scene = EditorSceneManager.NewScene(
             NewSceneSetup.EmptyScene,
             NewSceneMode.Single);
-        var probe = new GameObject("Appstack Phase D Probe");
-        probe.AddComponent<AppstackIntegrationProbe>();
+        var probe = new GameObject($"Appstack Phase {phase} Probe");
+        probe.AddComponent(probeType);
         Require(
             EditorSceneManager.SaveScene(scene, ScenePath),
             $"Could not save integration scene at {ScenePath}.");
@@ -108,6 +165,24 @@ internal static class AppstackIntegrationBuild
         };
         AssetDatabase.SaveAssets();
     }
+
+#if UNITY_IOS
+    private static void ConfigureRuntimeInfoPlist(string output)
+    {
+        var proxyUrl = Environment.GetEnvironmentVariable("APPSTACK_PHASE_E_PROXY_URL");
+        Require(
+            !string.IsNullOrEmpty(proxyUrl),
+            "APPSTACK_PHASE_E_PROXY_URL is required for the runtime player.");
+
+        var plistPath = Path.Combine(output, "Info.plist");
+        var plist = new PlistDocument();
+        plist.ReadFromFile(plistPath);
+        plist.root.SetString("APPSTACK_DEV_PROXY_URL", proxyUrl);
+        var transport = plist.root.CreateDict("NSAppTransportSecurity");
+        transport.SetBoolean("NSAllowsLocalNetworking", true);
+        plist.WriteToFile(plistPath);
+    }
+#endif
 
     private static void Build(BuildTarget target, string output, BuildOptions options)
     {

@@ -1,9 +1,10 @@
 # Unity player integration fixture
 
-This fixture is Phase D of the SDK validation matrix. It creates a clean
-temporary Unity 6 project, imports this repository through a local `file:`
-dependency, and compiles a scene that references every public SDK operation.
-It never launches a player or sends requests to Appstack.
+This fixture covers Phases D and E of the SDK validation matrix. Both create a
+clean temporary Unity 6 project and import this repository through a local
+`file:` dependency. Phase D validates generated players without launching
+them. Phase E launches an IL2CPP player against a local recording backend; it
+never needs a production Appstack API key or sends requests to Appstack.
 
 ## Requirements
 
@@ -13,6 +14,12 @@ It never launches a player or sends requests to Appstack.
   resolvable. The runner leaves package and build caches in their standard
   locations.
 - Xcode is required for the iOS compilation check.
+- Phase E iOS requires an available iPhone simulator. Override its automatic
+  selection with `IOS_SIMULATOR_UDID=<udid>`.
+- Phase E Android requires an attached emulator or device authorized by `adb`.
+  Override its automatic selection with `ANDROID_SERIAL=<serial>`.
+
+## Phase D: generated-player validation
 
 Run the complete matrix:
 
@@ -32,7 +39,7 @@ The runner prints its temporary workspace and retains it for inspection. Unity
 logs, Xcode logs, generated projects, APKs, and DerivedData live only there and
 are never imported into the UPM package or release archive.
 
-## Validated contract
+### Validated contract
 
 The import check proves that a clean Unity 6 project can resolve the package,
 compile its assemblies, and apply the committed plugin importer metadata. The
@@ -58,10 +65,67 @@ the corresponding build. This is required in batch mode so Unity loads the
 package's platform-conditional postprocessor before `BuildPipeline.BuildPlayer`
 runs.
 
-## Not covered
+### Not covered
 
 Phase D proves package import, IL2CPP compilation, generated-project wiring,
-R8 retention, and native binary linkage. Phase E remains responsible for
-installing and launching players on devices or simulators, real native SDK
-configuration, event delivery, lifecycle behavior, callback thread assertions,
-and backend payload verification.
+R8 retention, and native binary linkage. It does not execute native SDK code.
+
+## Phase E: runtime native integration
+
+Run on iOS Simulator:
+
+```sh
+Tests~/Integration/run-runtime-tests.sh ios
+```
+
+Run on an attached Android target:
+
+```sh
+Tests~/Integration/run-runtime-tests.sh android
+```
+
+Compile the Phase E Android player and generated test manifest without a
+target:
+
+```sh
+Tests~/Integration/run-runtime-tests.sh android-build
+```
+
+The runner starts a loopback recording backend on random ports and configures
+the native SDK through the bridges' internal development-proxy mechanism.
+Android requires an HTTPS attribution URL, so the runner generates a one-day
+local certificate and trusts it through a network-security resource bundled
+only in the temporary APK. Both its HTTP API port and HTTPS attribution port
+use `adb reverse`. iOS Simulator reaches the host HTTP loopback address
+directly. The proxy setting, certificate, and dummy API key exist only in the
+temporary test player and cannot enter the UPM package or release archive.
+
+Android app installation is removed during runner cleanup. The temporary host
+workspace and its logs remain available at the printed path for inspection.
+
+The machine-readable runtime probe and request validator prove that:
+
+- the player is IL2CPP and loads the pinned native SDK through the production
+  Unity bridge;
+- native configuration fetches remote configuration and produces an Appstack
+  ID without reporting the SDK disabled;
+- native install attribution performs a local match request and preserves
+  UTF-8 query parameters through the callback, using each native SDK's expected
+  `match_url` form;
+- three immediately successive attribution requests all complete once on the
+  Unity main thread;
+- after remote configuration is observably ready, a custom event and a
+  standard event reach the native HTTP wire boundary;
+- `customer_user_id`, `unity-1.0.0`, numbers, booleans, arrays, nested maps,
+  and UTF-8 strings retain their expected wire representation.
+
+The backend also records native lifecycle or install events, but their exact
+count is deliberately not asserted because it is native-SDK state dependent.
+
+### Not covered
+
+The local backend validates the wrapper/native boundary and native networking,
+not production service behavior. Simulator execution does not validate real
+Apple Ads attribution. Physical-device lifecycle transitions, deferred links,
+offline retry across process restarts, production TLS, and store-distributed
+release signing remain separate system or manual tests.

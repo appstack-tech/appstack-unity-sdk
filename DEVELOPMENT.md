@@ -14,8 +14,8 @@ The repository root is the Unity Package Manager package root:
 - `Tests/Editor/` contains Unity Test Framework editor tests.
 - `Tests~/Native/` contains native bridge contract fixtures excluded from Unity
   import and release archives.
-- `Tests~/Integration/` contains the clean Unity player build fixture, also
-  excluded from Unity import and release archives.
+- `Tests~/Integration/` contains the clean Unity player build and runtime
+  fixture, also excluded from Unity import and release archives.
 - `Samples~/` and `Documentation~/` contain integrator-facing package content.
 
 Keep all Unity `.meta` files committed. Generate a new unique GUID for every new
@@ -133,6 +133,15 @@ Run the Phase D player-build fixture as described in
 project, builds development and minified release Android players, exports and
 compiles an iOS player, and inspects the generated outputs for the required
 bridge, keep-rule, SPM, target-linking, and framework-embedding contracts.
+
+Run the Phase E runtime fixture from the same document on an iPhone Simulator
+and an attached Android target. It launches a clean IL2CPP player against a
+local recording backend and validates configuration, ID/status access, native
+attribution matching, successive callback delivery on Unity's main thread, and
+the exact custom-event wire payload. It uses a dummy API key and must never be
+changed to use production credentials. Android's pinned SDK requires HTTPS for
+`match_url`, so the runner generates and temporarily trusts its own local test
+certificate; that trust resource must remain confined to `Tests~/Integration/`.
 
 Android validation:
 
