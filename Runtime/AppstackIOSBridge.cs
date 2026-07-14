@@ -9,35 +9,16 @@ namespace Appstack
 {
     internal static class AppstackIOSBridge
     {
-        private static readonly object CallbackLock = new object();
-        private static readonly Dictionary<int, PendingCallback> Callbacks =
-            new Dictionary<int, PendingCallback>();
+        private static readonly PendingRequestRegistry<Dictionary<string, object>> Requests =
+            new PendingRequestRegistry<Dictionary<string, object>>();
         private static readonly AttributionParamsCallback NativeCallback =
             OnAttributionParamsReceived;
-        private static int nextRequestId;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void AttributionParamsCallback(
             int requestId,
             IntPtr json,
             IntPtr error);
-
-        private sealed class PendingCallback
-        {
-            public PendingCallback(
-                Action<Dictionary<string, object>> onSuccess,
-                Action<string> onError,
-                SynchronizationContext synchronizationContext)
-            {
-                OnSuccess = onSuccess;
-                OnError = onError;
-                SynchronizationContext = synchronizationContext;
-            }
-
-            public Action<Dictionary<string, object>> OnSuccess { get; }
-            public Action<string> OnError { get; }
-            public SynchronizationContext SynchronizationContext { get; }
-        }
 
         [DllImport("__Internal")]
         private static extern void AppstackUnityConfigure(
@@ -102,12 +83,10 @@ namespace Appstack
             Action<Dictionary<string, object>> onSuccess,
             Action<string> onError)
         {
-            var requestId = Interlocked.Increment(ref nextRequestId);
-            lock (CallbackLock)
-            {
-                Callbacks[requestId] =
-                    new PendingCallback(onSuccess, onError, SynchronizationContext.Current);
-            }
+            var requestId = Requests.Register(
+                onSuccess,
+                onError,
+                SynchronizationContext.Current);
 
             try
             {
@@ -134,36 +113,10 @@ namespace Appstack
 
         private static void CompleteRequest(int requestId, string json, string error)
         {
-            PendingCallback pending;
-            lock (CallbackLock)
-            {
-                if (!Callbacks.TryGetValue(requestId, out pending))
-                {
-                    return;
-                }
-
-                Callbacks.Remove(requestId);
-            }
-
-            void CompleteOnCapturedContext()
-            {
-                if (!string.IsNullOrEmpty(error))
-                {
-                    pending.OnError?.Invoke(error);
-                    return;
-                }
-
-                pending.OnSuccess?.Invoke(AppstackJson.ParseObject(json));
-            }
-
-            if (pending.SynchronizationContext != null)
-            {
-                pending.SynchronizationContext.Post(_ => CompleteOnCapturedContext(), null);
-            }
-            else
-            {
-                CompleteOnCapturedContext();
-            }
+            Requests.TryComplete(
+                requestId,
+                () => AppstackJson.ParseObject(json),
+                error);
         }
 
         private static string PtrToUtf8StringAndFree(IntPtr pointer)

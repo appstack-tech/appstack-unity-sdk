@@ -7,8 +7,10 @@ import android.os.Bundle;
 import com.appstack.attribution.AppstackAttributionSdk;
 import com.appstack.attribution.EventType;
 import com.appstack.attribution.LogLevel;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import kotlin.ResultKt;
@@ -122,15 +124,40 @@ public final class AppstackUnityBridge {
             Iterator<String> keys = object.keys();
             while (keys.hasNext()) {
                 String key = keys.next();
-                Object value = object.get(key);
-                if (value != JSONObject.NULL) {
-                    result.put(key, value);
-                }
+                result.put(key, jsonValue(object.get(key)));
             }
             return result;
         } catch (Throwable ignored) {
             return null;
         }
+    }
+
+    private static Object jsonValue(Object value) throws org.json.JSONException {
+        if (value == null || value == JSONObject.NULL) {
+            return null;
+        }
+
+        if (value instanceof JSONObject) {
+            JSONObject object = (JSONObject) value;
+            Map<String, Object> result = new HashMap<>();
+            Iterator<String> keys = object.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                result.put(key, jsonValue(object.get(key)));
+            }
+            return result;
+        }
+
+        if (value instanceof org.json.JSONArray) {
+            org.json.JSONArray array = (org.json.JSONArray) value;
+            List<Object> result = new ArrayList<>(array.length());
+            for (int index = 0; index < array.length(); index++) {
+                result.add(jsonValue(array.get(index)));
+            }
+            return result;
+        }
+
+        return value;
     }
 
     private static String toJson(Map<String, String> params) {

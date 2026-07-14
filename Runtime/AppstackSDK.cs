@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 namespace Appstack
@@ -54,17 +55,21 @@ namespace Appstack
                 throw;
             }
 
-#if !UNITY_EDITOR
-            try
+            if (AppstackSDKNative.ReportsConfigurationStatus)
             {
-                var disabled = AppstackSDKNative.IsSdkDisabled();
-                if (disabled)
-                    Debug.LogWarning("[AppstackSDK] SDK is disabled. Please check your API key.");
-                else
-                    Debug.Log("[AppstackSDK] SDK enabled and ready to track events.");
+                try
+                {
+                    var disabled = AppstackSDKNative.IsSdkDisabled();
+                    if (disabled)
+                        Debug.LogWarning("[AppstackSDK] SDK is disabled. Please check your API key.");
+                    else
+                        Debug.Log("[AppstackSDK] SDK enabled and ready to track events.");
+                }
+                catch
+                {
+                    // Configuration itself succeeded; status reporting is best-effort.
+                }
             }
-            catch { /* ignore */ }
-#endif
         }
 
         /// <summary>
@@ -72,7 +77,10 @@ namespace Appstack
         /// </summary>
         /// <param name="eventType">Event type from the EventType enum (required).</param>
         /// <param name="eventName">Event name required for CUSTOM events; ignored for standard events.</param>
-        /// <param name="parameters">Optional parameters (e.g. revenue, currency).</param>
+        /// <param name="parameters">Optional JSON-compatible parameters. Supports strings,
+        /// Booleans, finite numbers, nulls, nested string-keyed dictionaries, and arrays.</param>
+        /// <exception cref="ArgumentException">Thrown for missing custom event names or
+        /// parameter values that cannot be represented as JSON.</exception>
         public static void SendEvent(
             EventType eventType,
             string eventName = null,
@@ -82,7 +90,7 @@ namespace Appstack
             if (eventType == EventType.CUSTOM && string.IsNullOrWhiteSpace(eventName))
                 throw new ArgumentException("eventName is required when eventType is CUSTOM", nameof(eventName));
 
-            var parametersJson = ParametersToJson(parameters);
+            var parametersJson = AppstackJson.SerializeObject(parameters);
             try
             {
                 AppstackSDKNative.SendEvent(
@@ -102,7 +110,6 @@ namespace Appstack
         /// </summary>
         public static void EnableAppleAdsAttribution()
         {
-#if UNITY_IOS && !UNITY_EDITOR
             try
             {
                 AppstackSDKNative.EnableAppleAdsAttribution();
@@ -112,9 +119,6 @@ namespace Appstack
                 Debug.LogError($"[AppstackSDK] EnableAppleAdsAttribution failed: {e.Message}");
                 throw;
             }
-#else
-            Debug.Log("[AppstackSDK] EnableAppleAdsAttribution is only supported on iOS.");
-#endif
         }
 
         /// <summary>
@@ -161,14 +165,31 @@ namespace Appstack
             if (onSuccess == null)
                 throw new ArgumentNullException(nameof(onSuccess));
 
+            var completed = 0;
+            void CompleteSuccess(Dictionary<string, object> parameters)
+            {
+                if (Interlocked.Exchange(ref completed, 1) == 0)
+                {
+                    onSuccess(parameters);
+                }
+            }
+
+            void CompleteError(string error)
+            {
+                if (Interlocked.Exchange(ref completed, 1) == 0)
+                {
+                    onError?.Invoke(error);
+                }
+            }
+
             try
             {
-                AppstackSDKNative.GetAttributionParams(onSuccess, onError ?? (_ => { }));
+                AppstackSDKNative.GetAttributionParams(CompleteSuccess, CompleteError);
             }
             catch (Exception e)
             {
                 Debug.LogError($"[AppstackSDK] GetAttributionParams failed: {e.Message}");
-                onError?.Invoke(e.Message);
+                CompleteError(e.Message);
             }
         }
 
@@ -177,41 +198,5 @@ namespace Appstack
             return eventType == EventType.CUSTOM ? eventName : null;
         }
 
-        private static string ParametersToJson(Dictionary<string, object> parameters)
-        {
-            if (parameters == null || parameters.Count == 0)
-                return "{}";
-
-            var parts = new System.Text.StringBuilder();
-            parts.Append('{');
-            var first = true;
-            foreach (var kv in parameters)
-            {
-                if (!first) parts.Append(',');
-                first = false;
-                parts.Append('"');
-                parts.Append(EscapeJsonString(kv.Key));
-                parts.Append("\":");
-                parts.Append(ValueToJson(kv.Value));
-            }
-            parts.Append('}');
-            return parts.ToString();
-        }
-
-        private static string ValueToJson(object value)
-        {
-            if (value == null) return "null";
-            if (value is string s) return "\"" + EscapeJsonString(s) + "\"";
-            if (value is bool b) return b ? "true" : "false";
-            if (value is int || value is long || value is float || value is double)
-                return Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture);
-            return "\"" + EscapeJsonString(value.ToString()) + "\"";
-        }
-
-        private static string EscapeJsonString(string s)
-        {
-            if (string.IsNullOrEmpty(s)) return s;
-            return s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r");
-        }
     }
 }

@@ -12,6 +12,10 @@ The repository root is the Unity Package Manager package root:
 - `Runtime/Plugins/iOS/` contains the Swift C-ABI bridge.
 - `Editor/` contains dependency declarations and generated-project hooks.
 - `Tests/Editor/` contains Unity Test Framework editor tests.
+- `Tests~/Native/` contains native bridge contract fixtures excluded from Unity
+  import and release archives.
+- `Tests~/Integration/` contains the clean Unity player build and runtime
+  fixture, also excluded from Unity import and release archives.
 - `Samples~/` and `Documentation~/` contain integrator-facing package content.
 
 Keep all Unity `.meta` files committed. Generate a new unique GUID for every new
@@ -95,15 +99,13 @@ the application target so Xcode embeds and signs the dynamic framework. It also
 sets the Swift language version and enables Swift standard-library embedding on
 the application target.
 
-The `4.4.0-rc0` Swift package currently builds the SDK from source, so its SPI is
-available during compilation. The XCFramework checked into the iOS SDK tag has
-private interface files but does not expose the current `AppstackInternal` SPI.
-Do not switch this package to that binary artifact. A future binary must be
-rebuilt and its `.private.swiftinterface` files verified first.
+The `4.4.0-rc0` Swift package uses its binary XCFramework. Its private Swift
+interfaces expose the `AppstackInternal` SPI used by this bridge. The native
+contract fixture compiles the production bridge against the exact tagged binary
+and must pass before adopting any future binary SDK tag.
 
-Do not manually add Apple system frameworks in the Unity postprocessor while
-the SDK is source-based through Swift Package Manager; the native package owns
-its linker requirements.
+Do not manually add Apple system frameworks in the Unity postprocessor; the
+native Swift package owns its linker requirements.
 
 ## Internal development proxy
 
@@ -119,6 +121,27 @@ from the public Unity API and integrator documentation.
 
 Run the editor tests through the Unity Test Runner, then validate from a clean
 Unity 6 project using a local `file:` package dependency.
+
+Run the deterministic native bridge contracts as described in
+`Tests~/Native/README.md`. They compile the production Java bridge against the
+published Android artifact, exercise it against recording JVM stubs, compile
+the production Swift bridge against the exact tagged XCFramework, run its Swift
+contract tests, and verify its exported C symbols.
+
+Run the Phase D player-build fixture as described in
+`Tests~/Integration/README.md`. It imports this repository into a clean Unity 6
+project, builds development and minified release Android players, exports and
+compiles an iOS player, and inspects the generated outputs for the required
+bridge, keep-rule, SPM, target-linking, and framework-embedding contracts.
+
+Run the Phase E runtime fixture from the same document on an iPhone Simulator
+and an attached Android target. It launches a clean IL2CPP player against a
+local recording backend and validates configuration, ID/status access, native
+attribution matching, successive callback delivery on Unity's main thread, and
+the exact custom-event wire payload. It uses a dummy API key and must never be
+changed to use production credentials. Android's pinned SDK requires HTTPS for
+`match_url`, so the runner generates and temporarily trusts its own local test
+certificate; that trust resource must remain confined to `Tests~/Integration/`.
 
 Android validation:
 
