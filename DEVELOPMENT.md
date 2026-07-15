@@ -128,20 +128,21 @@ published Android artifact, exercise it against recording JVM stubs, compile
 the production Swift bridge against the exact tagged XCFramework, run its Swift
 contract tests, and verify its exported C symbols.
 
-Run the Phase D player-build fixture as described in
+Run the generated-player validation fixture as described in
 `Tests~/Integration/README.md`. It imports this repository into a clean Unity 6
 project, builds development and minified release Android players, exports and
 compiles an iOS player, and inspects the generated outputs for the required
 bridge, keep-rule, SPM, target-linking, and framework-embedding contracts.
 
-Run the Phase E runtime fixture from the same document on an iPhone Simulator
-and an attached Android target. It launches a clean IL2CPP player against a
-local recording backend and validates configuration, ID/status access, native
-attribution matching, successive callback delivery on Unity's main thread, and
-the exact custom-event wire payload. It uses a dummy API key and must never be
-changed to use production credentials. Android's pinned SDK requires HTTPS for
-`match_url`, so the runner generates and temporarily trusts its own local test
-certificate; that trust resource must remain confined to `Tests~/Integration/`.
+Run the runtime integration fixture from the same document on an iPhone
+Simulator and an attached Android target. It launches a clean IL2CPP player
+against a local recording backend and validates configuration, ID/status
+access, native attribution matching, successive callback delivery on Unity's
+main thread, and the exact custom-event wire payload. It uses a dummy API key
+and must never be changed to use production credentials. Android's pinned SDK
+requires HTTPS for `match_url`, so the runner generates and temporarily trusts
+its own local test certificate; that trust resource must remain confined to
+`Tests~/Integration/`.
 
 Android validation:
 

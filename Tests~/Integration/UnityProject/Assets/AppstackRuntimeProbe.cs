@@ -7,7 +7,7 @@ using UnityEngine;
 public sealed class AppstackRuntimeProbe : MonoBehaviour
 {
     private const int ExpectedCallbacks = 3;
-    private const string ResultPrefix = "APPSTACK_PHASE_E_RESULT:";
+    private const string ResultPrefix = "APPSTACK_RUNTIME_RESULT:";
 
     private readonly object gate = new object();
     private readonly List<int> callbackThreads = new List<int>();
@@ -22,9 +22,9 @@ public sealed class AppstackRuntimeProbe : MonoBehaviour
         mainThreadId = Thread.CurrentThread.ManagedThreadId;
 
         Appstack.AppstackSDK.Configure(
-            "phase-e-local-key",
+            "runtime-validation-local-key",
             logLevel: 0,
-            customerUserId: "phase-e-user");
+            customerUserId: "runtime-validation-user");
 
         var appstackId = Appstack.AppstackSDK.GetAppstackId();
         Appstack.AppstackSDK.EnableAppleAdsAttribution();
@@ -47,7 +47,7 @@ public sealed class AppstackRuntimeProbe : MonoBehaviour
         // Use that shared observable boundary before testing event delivery.
         Appstack.AppstackSDK.SendEvent(
             Appstack.EventType.CUSTOM,
-            eventName: "phase_e_custom",
+            eventName: "runtime_validation_custom",
             parameters: new Dictionary<string, object>
             {
                 { "number", 42 },
@@ -66,7 +66,7 @@ public sealed class AppstackRuntimeProbe : MonoBehaviour
             Appstack.EventType.LOGIN,
             parameters: new Dictionary<string, object>
             {
-                { "phase", "ready" },
+                { "state", "ready" },
                 { "sequence", 2 }
             });
 
@@ -100,8 +100,8 @@ public sealed class AppstackRuntimeProbe : MonoBehaviour
     private void OnAttributionSuccess(Dictionary<string, object> parameters)
     {
         var valid = parameters != null &&
-                    parameters.TryGetValue("phase_e", out var phase) &&
-                    string.Equals(phase as string, "attributed", StringComparison.Ordinal) &&
+                    parameters.TryGetValue("runtime_validation", out var state) &&
+                    string.Equals(state as string, "attributed", StringComparison.Ordinal) &&
                     parameters.TryGetValue("unicode", out var unicode) &&
                     string.Equals(unicode as string, "café 🚀", StringComparison.Ordinal);
 

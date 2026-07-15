@@ -3,7 +3,7 @@
   <base-config cleartextTrafficPermitted="true">
     <trust-anchors>
       <certificates src="system" />
-      <certificates src="@raw/appstack_phase_e_ca" />
+      <certificates src="@raw/appstack_runtime_validation_ca" />
     </trust-anchors>
   </base-config>
 </network-security-config>

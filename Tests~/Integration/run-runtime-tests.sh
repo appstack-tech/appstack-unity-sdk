@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKAGE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 UNITY_EDITOR="${UNITY_EDITOR:-/Applications/Unity/Hub/Editor/6000.5.3f1/Unity.app/Contents/MacOS/Unity}"
 MODE="${1:-ios}"
-BUNDLE_ID="tech.appstack.unity.phasee"
+BUNDLE_ID="tech.appstack.unity.runtimevalidation"
 
 case "$MODE" in
   ios|android|android-build) ;;
@@ -20,7 +20,7 @@ if [[ ! -x "$UNITY_EDITOR" ]]; then
   exit 1
 fi
 
-WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/appstack-unity-phase-e.XXXXXX")"
+WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/appstack-unity-runtime-validation.XXXXXX")"
 PROJECT_DIR="$WORK_DIR/project"
 LOG_DIR="$WORK_DIR/logs"
 PORT_FILE="$WORK_DIR/mock-port.txt"
@@ -107,13 +107,13 @@ if [[ "$MODE" != "ios" ]]; then
   tls_port="$(cat "$TLS_PORT_FILE")"
 fi
 proxy_url="http://127.0.0.1:$port"
-export APPSTACK_PHASE_E_PROXY_URL="$proxy_url"
-export APPSTACK_PHASE_E_IOS_ARCH="$(uname -m)"
-echo "Phase E workspace: $WORK_DIR"
+export APPSTACK_RUNTIME_PROXY_URL="$proxy_url"
+export APPSTACK_RUNTIME_IOS_ARCH="$(uname -m)"
+echo "Runtime integration validation workspace: $WORK_DIR"
 
 wait_for_result() {
   for _ in {1..60}; do
-    if grep -F "APPSTACK_PHASE_E_RESULT:" "$RUNTIME_LOG" >/dev/null 2>&1; then
+    if grep -F "APPSTACK_RUNTIME_RESULT:" "$RUNTIME_LOG" >/dev/null 2>&1; then
       return 0
     fi
     sleep 1
@@ -162,7 +162,7 @@ raise SystemExit(1)
     -executeMethod AppstackIntegrationBuild.ExportIOSSimulatorRuntimePlayer \
     -logFile "$LOG_DIR/unity-ios.log"
 
-  ios_output="$PROJECT_DIR/Builds/PhaseE/iOS"
+  ios_output="$PROJECT_DIR/Builds/RuntimeValidation/iOS"
   ios_container=(-project "$ios_output/Unity-iPhone.xcodeproj")
   if [[ -d "$ios_output/Unity-iPhone.xcworkspace" ]]; then
     ios_container=(-workspace "$ios_output/Unity-iPhone.xcworkspace")
@@ -200,12 +200,12 @@ else
     fi
   fi
 
-  android_library="$PROJECT_DIR/Assets/Plugins/Android/AppstackPhaseE.androidlib"
+  android_library="$PROJECT_DIR/Assets/Plugins/Android/AppstackRuntimeValidation.androidlib"
   mkdir -p "$android_library/res/raw" "$android_library/res/xml"
-  cp "$TLS_CERT" "$android_library/res/raw/appstack_phase_e_ca.pem"
+  cp "$TLS_CERT" "$android_library/res/raw/appstack_runtime_validation_ca.pem"
   cp "$SCRIPT_DIR/network_security_config.xml" \
-    "$android_library/res/xml/appstack_phase_e_network_security_config.xml"
-  sed "s|__APPSTACK_PHASE_E_PROXY_URL__|$proxy_url|g" \
+    "$android_library/res/xml/appstack_runtime_validation_network_security_config.xml"
+  sed "s|__APPSTACK_RUNTIME_PROXY_URL__|$proxy_url|g" \
     "$SCRIPT_DIR/AndroidManifest.xml.in" > "$android_library/AndroidManifest.xml"
 
   "$UNITY_EDITOR" \
@@ -217,7 +217,7 @@ else
     -executeMethod AppstackIntegrationBuild.BuildAndroidRuntimePlayer \
     -logFile "$LOG_DIR/unity-android.log"
 
-  apk="$PROJECT_DIR/Builds/PhaseE/Android/appstack-phase-e.apk"
+  apk="$PROJECT_DIR/Builds/RuntimeValidation/Android/appstack-runtime-validation.apk"
   apkanalyzer="$android_root/SDK/cmdline-tools/16.0/bin/apkanalyzer"
   apk_manifest="$LOG_DIR/android-manifest.xml"
   "$apkanalyzer" manifest print "$apk" > "$apk_manifest"
@@ -227,7 +227,7 @@ else
   grep -F "android:value=\"$proxy_url\"" "$apk_manifest" >/dev/null
 
   if [[ "$MODE" == "android-build" ]]; then
-    echo "Phase E Android runtime player build passed. Artifacts remain at $WORK_DIR"
+    echo "Android runtime player build passed. Artifacts remain at $WORK_DIR"
     exit 0
   fi
 
@@ -253,4 +253,4 @@ fi
 python3 "$SCRIPT_DIR/validate_runtime.py" \
   --runtime-log "$RUNTIME_LOG" \
   --requests-file "$REQUESTS_FILE"
-echo "Phase E $MODE runtime validation passed. Artifacts remain at $WORK_DIR"
+echo "$MODE runtime integration validation passed. Artifacts remain at $WORK_DIR"

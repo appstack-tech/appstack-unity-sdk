@@ -33,13 +33,13 @@ internal static class AppstackIntegrationBuild
 
         ValidatePluginImporter(AndroidBridgePath, BuildTarget.Android, BuildTarget.iOS);
         ValidatePluginImporter(IOSBridgePath, BuildTarget.iOS, BuildTarget.Android);
-        Debug.Log($"[Appstack Phase D] Imported {package.name}@{package.version} from {package.resolvedPath}.");
+        Debug.Log($"[Appstack Integration Validation] Imported {package.name}@{package.version} from {package.resolvedPath}.");
     }
 
     public static void BuildAndroidPlayers()
     {
         ValidateImport();
-        ConfigureSharedProject(typeof(AppstackIntegrationProbe), "tech.appstack.unity.phased");
+        ConfigureSharedProject(typeof(AppstackIntegrationProbe), "tech.appstack.unity.playervalidation");
         SwitchTarget(BuildTargetGroup.Android, BuildTarget.Android);
 
         PlayerSettings.SetScriptingBackend(
@@ -56,11 +56,11 @@ internal static class AppstackIntegrationBuild
 
         Build(
             BuildTarget.Android,
-            "Builds/PhaseD/Android/appstack-phase-d-development.apk",
+            "Builds/PlayerValidation/Android/appstack-player-validation-development.apk",
             BuildOptions.Development | BuildOptions.CleanBuildCache);
         Build(
             BuildTarget.Android,
-            "Builds/PhaseD/Android/appstack-phase-d-release.apk",
+            "Builds/PlayerValidation/Android/appstack-player-validation-release.apk",
             BuildOptions.CleanBuildCache);
 
         ValidateGeneratedKeepRules();
@@ -69,7 +69,7 @@ internal static class AppstackIntegrationBuild
     public static void ExportIOSPlayer()
     {
         ValidateImport();
-        ConfigureSharedProject(typeof(AppstackIntegrationProbe), "tech.appstack.unity.phased");
+        ConfigureSharedProject(typeof(AppstackIntegrationProbe), "tech.appstack.unity.playervalidation");
         SwitchTarget(BuildTargetGroup.iOS, BuildTarget.iOS);
 
         PlayerSettings.SetScriptingBackend(
@@ -80,7 +80,7 @@ internal static class AppstackIntegrationBuild
             ManagedStrippingLevel.Medium);
         PlayerSettings.iOS.targetOSVersionString = "15.0";
 
-        const string output = "Builds/PhaseD/iOS";
+        const string output = "Builds/PlayerValidation/iOS";
         Build(BuildTarget.iOS, output, BuildOptions.CleanBuildCache);
         ValidateIOSExport(output);
     }
@@ -88,7 +88,7 @@ internal static class AppstackIntegrationBuild
     public static void BuildAndroidRuntimePlayer()
     {
         ValidateImport();
-        ConfigureSharedProject(typeof(AppstackRuntimeProbe), "tech.appstack.unity.phasee");
+        ConfigureSharedProject(typeof(AppstackRuntimeProbe), "tech.appstack.unity.runtimevalidation");
         SwitchTarget(BuildTargetGroup.Android, BuildTarget.Android);
 
         PlayerSettings.SetScriptingBackend(
@@ -103,7 +103,7 @@ internal static class AppstackIntegrationBuild
 
         Build(
             BuildTarget.Android,
-            "Builds/PhaseE/Android/appstack-phase-e.apk",
+            "Builds/RuntimeValidation/Android/appstack-runtime-validation.apk",
             BuildOptions.Development | BuildOptions.CleanBuildCache);
     }
 
@@ -111,7 +111,7 @@ internal static class AppstackIntegrationBuild
     public static void ExportIOSSimulatorRuntimePlayer()
     {
         ValidateImport();
-        ConfigureSharedProject(typeof(AppstackRuntimeProbe), "tech.appstack.unity.phasee");
+        ConfigureSharedProject(typeof(AppstackRuntimeProbe), "tech.appstack.unity.runtimevalidation");
         SwitchTarget(BuildTargetGroup.iOS, BuildTarget.iOS);
 
         PlayerSettings.SetScriptingBackend(
@@ -123,15 +123,15 @@ internal static class AppstackIntegrationBuild
         PlayerSettings.iOS.targetOSVersionString = "15.0";
         PlayerSettings.iOS.sdkVersion = iOSSdkVersion.SimulatorSDK;
         var simulatorArchitecture = Environment.GetEnvironmentVariable(
-            "APPSTACK_PHASE_E_IOS_ARCH");
+            "APPSTACK_RUNTIME_IOS_ARCH");
         Require(
             simulatorArchitecture == "arm64" || simulatorArchitecture == "x86_64",
-            "APPSTACK_PHASE_E_IOS_ARCH must be arm64 or x86_64.");
+            "APPSTACK_RUNTIME_IOS_ARCH must be arm64 or x86_64.");
         PlayerSettings.iOS.simulatorSdkArchitecture = simulatorArchitecture == "arm64"
             ? AppleMobileArchitectureSimulator.ARM64
             : AppleMobileArchitectureSimulator.X86_64;
 
-        const string output = "Builds/PhaseE/iOS";
+        const string output = "Builds/RuntimeValidation/iOS";
         Build(BuildTarget.iOS, output, BuildOptions.Development | BuildOptions.CleanBuildCache);
         ConfigureRuntimeInfoPlist(output);
         ValidateIOSExport(output);
@@ -140,9 +140,11 @@ internal static class AppstackIntegrationBuild
 
     private static void ConfigureSharedProject(Type probeType, string applicationIdentifier)
     {
-        var phase = probeType == typeof(AppstackRuntimeProbe) ? "E" : "D";
+        var validationName = probeType == typeof(AppstackRuntimeProbe)
+            ? "Runtime Validation"
+            : "Player Validation";
         PlayerSettings.companyName = "Appstack";
-        PlayerSettings.productName = $"Appstack Phase {phase}";
+        PlayerSettings.productName = $"Appstack {validationName}";
         PlayerSettings.bundleVersion = "1.0.0";
         PlayerSettings.SetApplicationIdentifier(
             NamedBuildTarget.Android,
@@ -154,7 +156,7 @@ internal static class AppstackIntegrationBuild
         var scene = EditorSceneManager.NewScene(
             NewSceneSetup.EmptyScene,
             NewSceneMode.Single);
-        var probe = new GameObject($"Appstack Phase {phase} Probe");
+        var probe = new GameObject($"Appstack {validationName} Probe");
         probe.AddComponent(probeType);
         Require(
             EditorSceneManager.SaveScene(scene, ScenePath),
@@ -169,10 +171,10 @@ internal static class AppstackIntegrationBuild
 #if UNITY_IOS
     private static void ConfigureRuntimeInfoPlist(string output)
     {
-        var proxyUrl = Environment.GetEnvironmentVariable("APPSTACK_PHASE_E_PROXY_URL");
+        var proxyUrl = Environment.GetEnvironmentVariable("APPSTACK_RUNTIME_PROXY_URL");
         Require(
             !string.IsNullOrEmpty(proxyUrl),
-            "APPSTACK_PHASE_E_PROXY_URL is required for the runtime player.");
+            "APPSTACK_RUNTIME_PROXY_URL is required for the runtime player.");
 
         var plistPath = Path.Combine(output, "Info.plist");
         var plist = new PlistDocument();
@@ -203,7 +205,7 @@ internal static class AppstackIntegrationBuild
             report.summary.result == BuildResult.Succeeded,
             $"{target} build failed with {report.summary.totalErrors} errors.");
         Debug.Log(
-            $"[Appstack Phase D] {target} build succeeded: " +
+            $"[Appstack Integration Validation] {target} build succeeded: " +
             $"{report.summary.totalSize} bytes in {report.summary.totalTime}.");
     }
 
@@ -242,7 +244,7 @@ internal static class AppstackIntegrationBuild
         Require(
             rules.Contains("AppstackUnityBridge$AttributionParamsCallback", StringComparison.Ordinal),
             "Generated ProGuard rules do not keep the JNI callback interface.");
-        Debug.Log($"[Appstack Phase D] Validated generated keep rules at {candidates[0]}.");
+        Debug.Log($"[Appstack Player Validation] Validated generated keep rules at {candidates[0]}.");
     }
 
     private static void ValidateIOSExport(string output)
@@ -273,7 +275,7 @@ internal static class AppstackIntegrationBuild
         Require(
             project.Contains("ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;", StringComparison.Ordinal),
             "Application target is not configured to embed Swift standard libraries.");
-        Debug.Log("[Appstack Phase D] Validated generated Xcode package and bridge wiring.");
+        Debug.Log("[Appstack Player Validation] Validated generated Xcode package and bridge wiring.");
     }
 
     private static int Count(string value, string fragment)
@@ -299,7 +301,7 @@ internal static class AppstackIntegrationBuild
     {
         if (!condition)
         {
-            throw new BuildFailedException($"Appstack Phase D: {message}");
+            throw new BuildFailedException($"Appstack integration validation: {message}");
         }
     }
 }

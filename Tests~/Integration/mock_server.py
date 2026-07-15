@@ -33,7 +33,7 @@ def main() -> None:
                 if path.startswith("/ios/"):
                     match_url = (
                         f"http://127.0.0.1:{http_server.server_port}"
-                        "/attribution/match/phase_e_app"
+                        "/attribution/match/runtime_validation_app"
                     )
                 elif tls_server is not None:
                     match_url = (
@@ -46,7 +46,7 @@ def main() -> None:
                 self.respond(
                     200,
                     {
-                        "app_id": "phase_e_app",
+                        "app_id": "runtime_validation_app",
                         "sdk_enabled": True,
                         "match_url": match_url,
                         "use_install_detection_v2": False,
@@ -57,20 +57,20 @@ def main() -> None:
                 self.respond(
                     200,
                     {
-                        "deeplink_id": "phase-e-deeplink",
-                        "app_id": "phase_e_app",
+                        "deeplink_id": "runtime-validation-deeplink",
+                        "app_id": "runtime_validation_app",
                         "redirection_url": "https://example.invalid/app",
                         "timestamp": "2026-07-13T00:00:00Z",
                         "method": "GET",
                         "url": "https://example.invalid/deeplink",
                         "query_params": {
-                            "phase_e": "attributed",
+                            "runtime_validation": "attributed",
                             "unicode": "café 🚀",
                             "source": "local-mock",
                         },
                         "path_params": {},
                         "cookies": {},
-                        "install_id": "phase-e-install",
+                        "install_id": "runtime-validation-install",
                         "event_type": "install",
                         "date_day": "2026-07-13",
                     },

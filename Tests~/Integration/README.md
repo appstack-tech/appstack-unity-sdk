@@ -1,10 +1,12 @@
 # Unity player integration fixture
 
-This fixture covers Phases D and E of the SDK validation matrix. Both create a
-clean temporary Unity 6 project and import this repository through a local
-`file:` dependency. Phase D validates generated players without launching
-them. Phase E launches an IL2CPP player against a local recording backend; it
-never needs a production Appstack API key or sends requests to Appstack.
+This fixture provides two complementary integration checks. The generated-player
+validation imports the package and verifies Android and iOS build outputs
+without launching them. The runtime integration validation launches an
+IL2CPP player against a local recording backend. Both checks create a clean
+temporary Unity 6 project and import this repository through a local `file:`
+dependency. Neither needs a production Appstack API key or sends requests to
+Appstack.
 
 ## Requirements
 
@@ -14,12 +16,13 @@ never needs a production Appstack API key or sends requests to Appstack.
   resolvable. The runner leaves package and build caches in their standard
   locations.
 - Xcode is required for the iOS compilation check.
-- Phase E iOS requires an available iPhone simulator. Override its automatic
-  selection with `IOS_SIMULATOR_UDID=<udid>`.
-- Phase E Android requires an attached emulator or device authorized by `adb`.
-  Override its automatic selection with `ANDROID_SERIAL=<serial>`.
+- Runtime validation on iOS requires an available iPhone simulator. Override
+  its automatic selection with `IOS_SIMULATOR_UDID=<udid>`.
+- Runtime validation on Android requires an attached emulator or device
+  authorized by `adb`. Override its automatic selection with
+  `ANDROID_SERIAL=<serial>`.
 
-## Phase D: generated-player validation
+## Generated-player validation
 
 Run the complete matrix:
 
@@ -67,10 +70,10 @@ runs.
 
 ### Not covered
 
-Phase D proves package import, IL2CPP compilation, generated-project wiring,
+This check proves package import, IL2CPP compilation, generated-project wiring,
 R8 retention, and native binary linkage. It does not execute native SDK code.
 
-## Phase E: runtime native integration
+## Runtime integration validation
 
 Run on iOS Simulator:
 
@@ -84,7 +87,7 @@ Run on an attached Android target:
 Tests~/Integration/run-runtime-tests.sh android
 ```
 
-Compile the Phase E Android player and generated test manifest without a
+Compile the Android runtime player and generated test manifest without a
 target:
 
 ```sh
