@@ -10,8 +10,8 @@ attribution data from Unity applications.
 - Unity 6 (`6000.0`) or newer
 - iOS 15.0 or newer
 - Android API level 21 or newer, target API level 34+, and Java 17+
-- External Dependency Manager for Unity (EDM4U) recommended for automatic
-  Android dependency resolution
+- For Android builds, either External Dependency Manager for Unity (EDM4U) or
+  the documented manual Gradle dependency configuration
 
 ## Installation
 
@@ -41,8 +41,10 @@ You can also add a local dependency to your project's `Packages/manifest.json`:
 
 ## Platform setup
 
-iOS dependency setup is automatic. EDM4U is recommended for Android, but
-Android projects can use the documented manual Gradle setup instead.
+iOS dependency setup is automatic. Before building for Android, the Appstack
+native Android SDK must be added to the generated Gradle project. Install EDM4U
+for automatic resolution (recommended), or follow the manual Gradle setup. The
+Appstack Unity package does not install EDM4U automatically.
 
 - [iOS setup](Documentation~/iOS.md)
 - [Android setup](Documentation~/Android.md)
