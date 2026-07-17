@@ -25,7 +25,7 @@ swift test --package-path "$PACKAGE_DIR"
 EXACT_SDK_DIR="$TEMP_DIR/exact-sdk"
 mkdir -p "$EXACT_SDK_DIR"
 if [[ -d "$SDK_INPUT/.git" || -f "$SDK_INPUT/.git" ]]; then
-    git -C "$SDK_INPUT" archive 4.4.0-rc0 AppstackSDK.xcframework | tar -x -C "$EXACT_SDK_DIR"
+    git -C "$SDK_INPUT" archive 4.4.0 AppstackSDK.xcframework | tar -x -C "$EXACT_SDK_DIR"
     XCFRAMEWORK="$EXACT_SDK_DIR/AppstackSDK.xcframework"
 elif [[ "$SDK_INPUT" == *.xcframework ]]; then
     XCFRAMEWORK="$SDK_INPUT"
@@ -67,4 +67,4 @@ for symbol in "${EXPECTED_SYMBOLS[@]}"; do
     fi
 done
 
-echo "Verified iOS bridge against AppstackSDK 4.4.0-rc0 and all expected C symbols."
+echo "Verified iOS bridge against AppstackSDK 4.4.0 and all expected C symbols."

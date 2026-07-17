@@ -9,7 +9,7 @@ package artifact.
 The Android fixture has two modules:
 
 - `real-artifact` compiles the production Java bridge against
-  `tech.appstack.android-sdk:appstack-android-sdk:1.5.0-rc1`.
+  `tech.appstack.android-sdk:appstack-android-sdk:1.5.0`.
 - `contract-tests` compiles the same bridge against recording stubs and tests
   configuration, proxy metadata, log/event mapping, JSON conversion, getters,
   and immediate, suspended, and failed coroutine completion.
@@ -26,7 +26,7 @@ The Android 35 SDK, JDK 17, Google Maven, and Maven Central must be available.
 
 The iOS runner copies the production Swift bridge into a temporary Swift package.
 It first runs deterministic XCTest cases against a recording `AppstackSDK` module,
-then extracts the exact `4.4.0-rc0` XCFramework from an `ios-appstack-sdk` checkout,
+then extracts the exact `4.4.0` XCFramework from an `ios-appstack-sdk` checkout,
 compiles the production bridge for an iOS 15 simulator target, and checks every
 expected C ABI symbol with `nm`.
 

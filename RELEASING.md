@@ -19,9 +19,9 @@ The GitHub Actions workflow packages the root-level UPM contents. It:
 
 ## Before tagging
 
-1. Decide whether the release will use the current native RC dependencies or
-   stable native versions.
-2. Update native dependency pins in `Editor/AppstackDependencies.xml` and the
+1. Confirm the release uses the intended stable Android and iOS native SDK
+   versions.
+2. Update both native dependency pins, their validation fixtures, and the
    public platform documentation together.
 3. Run `node scripts~/set-version.mjs <version>`. This updates the root
    `package.json` and regenerates `Runtime/AppstackVersion.cs` together.

@@ -261,7 +261,7 @@ internal static class AppstackIntegrationBuild
             project.Contains("https://github.com/appstack-tech/ios-appstack-sdk.git", StringComparison.Ordinal),
             "Xcode project is missing the Appstack Swift package URL.");
         Require(
-            project.Contains("4.4.0-rc0", StringComparison.Ordinal),
+            project.Contains("version = 4.4.0;", StringComparison.Ordinal),
             "Xcode project is missing the exact Appstack Swift package version.");
         Require(
             Count(project, "productName = AppstackSDK;") == 2,

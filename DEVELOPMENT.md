@@ -55,13 +55,13 @@ Cross-platform behavior that must remain aligned:
 
 Dependency versions are declared in the platform-specific editor integration:
 
-- Android: `tech.appstack.android-sdk:appstack-android-sdk:1.5.0-rc1` in
+- Android: `tech.appstack.android-sdk:appstack-android-sdk:1.5.0` in
   `Editor/AppstackDependencies.xml`
-- iOS: `AppstackSDK` Swift package product at `4.4.0-rc0` in
+- iOS: `AppstackSDK` Swift package product at `4.4.0` in
   `Editor/AppstackIOSPostProcessBuild.cs`
 
-When native stable versions are published, update the corresponding editor
-integration, public setup documentation, changelog, and validation matrix
+When either native dependency changes, update the corresponding editor
+integration, public setup documentation, changelog, and validation fixtures
 together.
 
 ## Android architecture
@@ -99,7 +99,7 @@ the application target so Xcode embeds and signs the dynamic framework. It also
 sets the Swift language version and enables Swift standard-library embedding on
 the application target.
 
-The `4.4.0-rc0` Swift package uses its binary XCFramework. Its private Swift
+The `4.4.0` Swift package uses its binary XCFramework. Its private Swift
 interfaces expose the `AppstackInternal` SPI used by this bridge. The native
 contract fixture compiles the production bridge against the exact tagged binary
 and must pass before adopting any future binary SDK tag.

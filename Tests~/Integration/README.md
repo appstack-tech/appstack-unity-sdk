@@ -57,7 +57,7 @@ iOS exports an IL2CPP Xcode project and verifies all of the following before
 compiling it without code signing:
 
 - the Swift bridge is copied and compiled in `UnityFramework`;
-- the SPM URL and exact `4.4.0-rc0` requirement are present;
+- the SPM URL and exact `4.4.0` requirement are present;
 - `AppstackSDK` is linked to `UnityFramework` and the application target;
 - the Swift language and runtime-embedding build settings are present;
 - Xcode resolves the package, compiles the application, and produces
