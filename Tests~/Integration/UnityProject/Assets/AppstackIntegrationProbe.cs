@@ -7,13 +7,13 @@ public sealed class AppstackIntegrationProbe : MonoBehaviour
     {
 #if !UNITY_EDITOR
         Appstack.AppstackSDK.Configure(
-            "phase-d-build-only-key",
+            "player-validation-build-only-key",
             logLevel: 0,
-            customerUserId: "phase-d-user");
+            customerUserId: "player-validation-user");
 
         Appstack.AppstackSDK.SendEvent(
             Appstack.EventType.CUSTOM,
-            eventName: "phase_d_build",
+            eventName: "player_validation_build",
             parameters: new Dictionary<string, object>
             {
                 { "number", 42 },

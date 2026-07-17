@@ -19,7 +19,7 @@ case "$MODE" in
     ;;
 esac
 
-WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/appstack-unity-phase-d.XXXXXX")"
+WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/appstack-unity-player-validation.XXXXXX")"
 PROJECT_DIR="$WORK_DIR/project"
 LOG_DIR="$WORK_DIR/logs"
 mkdir -p "$PROJECT_DIR" "$LOG_DIR"
@@ -51,7 +51,7 @@ run_unity() {
   "$UNITY_EDITOR" "${unity_arguments[@]}"
 }
 
-echo "Phase D workspace: $WORK_DIR"
+echo "Generated-player validation workspace: $WORK_DIR"
 
 if [[ "$MODE" == "all" || "$MODE" == "import" ]]; then
   run_unity AppstackIntegrationBuild.ValidateImport import
@@ -60,8 +60,8 @@ fi
 if [[ "$MODE" == "all" || "$MODE" == "android" ]]; then
   run_unity AppstackIntegrationBuild.BuildAndroidPlayers android Android
 
-  development_apk="$PROJECT_DIR/Builds/PhaseD/Android/appstack-phase-d-development.apk"
-  release_apk="$PROJECT_DIR/Builds/PhaseD/Android/appstack-phase-d-release.apk"
+  development_apk="$PROJECT_DIR/Builds/PlayerValidation/Android/appstack-player-validation-development.apk"
+  release_apk="$PROJECT_DIR/Builds/PlayerValidation/Android/appstack-player-validation-release.apk"
   [[ -f "$development_apk" ]] || { echo "Missing development APK" >&2; exit 1; }
   [[ -f "$release_apk" ]] || { echo "Missing release APK" >&2; exit 1; }
 
@@ -83,7 +83,7 @@ fi
 if [[ "$MODE" == "all" || "$MODE" == "ios" ]]; then
   run_unity AppstackIntegrationBuild.ExportIOSPlayer ios iOS
 
-  ios_output="$PROJECT_DIR/Builds/PhaseD/iOS"
+  ios_output="$PROJECT_DIR/Builds/PlayerValidation/iOS"
   ios_container=(-project "$ios_output/Unity-iPhone.xcodeproj")
   if [[ -d "$ios_output/Unity-iPhone.xcworkspace" ]]; then
     ios_container=(-workspace "$ios_output/Unity-iPhone.xcworkspace")
@@ -108,4 +108,4 @@ if [[ "$MODE" == "all" || "$MODE" == "ios" ]]; then
   echo "iOS export, package resolution, compilation, and framework embedding passed."
 fi
 
-echo "Phase D passed. Logs and generated players remain at $WORK_DIR"
+echo "Generated-player validation passed. Logs and generated players remain at $WORK_DIR"

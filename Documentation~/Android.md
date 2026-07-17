@@ -33,7 +33,7 @@ repositories {
 }
 
 dependencies {
-    implementation "tech.appstack.android-sdk:appstack-android-sdk:1.5.0-rc1"
+    implementation "tech.appstack.android-sdk:appstack-android-sdk:1.5.0"
 }
 ```
 

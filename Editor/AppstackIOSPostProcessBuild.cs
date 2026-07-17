@@ -10,7 +10,7 @@ namespace Appstack.Editor
     {
         private const string PackageUrl =
             "https://github.com/appstack-tech/ios-appstack-sdk.git";
-        private const string PackageVersion = "4.4.0-rc0";
+        private const string PackageVersion = "4.4.0";
         private const string PackageProduct = "AppstackSDK";
 
         public int callbackOrder => 999;

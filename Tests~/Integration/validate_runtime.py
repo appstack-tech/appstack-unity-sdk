@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 
-RESULT_PREFIX = "APPSTACK_PHASE_E_RESULT:"
+RESULT_PREFIX = "APPSTACK_RUNTIME_RESULT:"
 
 
 def require(condition: bool, message: str) -> None:
@@ -20,7 +20,7 @@ def main() -> None:
 
     runtime_log = Path(args.runtime_log).read_text(encoding="utf-8", errors="replace")
     result_lines = [line for line in runtime_log.splitlines() if RESULT_PREFIX in line]
-    require(result_lines, "runtime log has no terminal Phase E result")
+    require(result_lines, "runtime log has no terminal validation result")
     result = json.loads(result_lines[-1].split(RESULT_PREFIX, 1)[1].strip())
 
     require(result.get("appstackIdPresent") is True, "native SDK returned no Appstack ID")
@@ -43,12 +43,14 @@ def main() -> None:
 
     events = [item["body"] for item in requests
               if item["path"].split("?", 1)[0].endswith("/events") and item.get("body")]
-    custom = next((event for event in events if event.get("event_name") == "phase_e_custom"), None)
+    custom = next((event for event in events
+                   if event.get("event_name") == "runtime_validation_custom"), None)
     login = next((event for event in events if event.get("event_name") == "LOGIN"), None)
     require(custom is not None, "custom event never reached the native wire boundary")
     require(login is not None, "standard event never reached the native wire boundary")
     require(custom.get("wrapper_version") == "unity-1.0.0", "wrong wrapper version on event")
-    require(custom.get("customer_user_id") == "phase-e-user", "customer ID was not forwarded")
+    require(custom.get("customer_user_id") == "runtime-validation-user",
+            "customer ID was not forwarded")
 
     parameters = custom.get("custom_parameters") or {}
     require(parameters.get("number") == 42, "numeric custom parameter changed")
@@ -57,7 +59,7 @@ def main() -> None:
             "nested custom parameters changed")
 
     login_parameters = login.get("custom_parameters") or {}
-    require(login_parameters.get("phase") == "ready", "standard event string parameter changed")
+    require(login_parameters.get("state") == "ready", "standard event string parameter changed")
     require(login_parameters.get("sequence") == 2, "standard event numeric parameter changed")
 
     print(json.dumps({

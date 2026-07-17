@@ -11,8 +11,8 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Initial Unity Package Manager distribution as `com.appstack.unity-sdk` for
   Unity 6 (`6000.0`) or newer.
-- Support for iOS 15.0+ through Appstack iOS SDK `4.4.0-rc0` and Android API
-  level 21+ through Appstack Android SDK `1.5.0-rc1`.
+- Support for iOS 15.0+ through Appstack iOS SDK `4.4.0` and Android API level
+  21+ through Appstack Android SDK `1.5.0`.
 - SDK configuration with an API key, log level, and optional customer user ID.
 - Standard and custom event tracking with optional event parameters.
 - Apple Ads attribution on iOS.

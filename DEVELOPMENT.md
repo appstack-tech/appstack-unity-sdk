@@ -55,13 +55,13 @@ Cross-platform behavior that must remain aligned:
 
 Dependency versions are declared in the platform-specific editor integration:
 
-- Android: `tech.appstack.android-sdk:appstack-android-sdk:1.5.0-rc1` in
+- Android: `tech.appstack.android-sdk:appstack-android-sdk:1.5.0` in
   `Editor/AppstackDependencies.xml`
-- iOS: `AppstackSDK` Swift package product at `4.4.0-rc0` in
+- iOS: `AppstackSDK` Swift package product at `4.4.0` in
   `Editor/AppstackIOSPostProcessBuild.cs`
 
-When native stable versions are published, update the corresponding editor
-integration, public setup documentation, changelog, and validation matrix
+When either native dependency changes, update the corresponding editor
+integration, public setup documentation, changelog, and validation fixtures
 together.
 
 ## Android architecture
@@ -99,7 +99,7 @@ the application target so Xcode embeds and signs the dynamic framework. It also
 sets the Swift language version and enables Swift standard-library embedding on
 the application target.
 
-The `4.4.0-rc0` Swift package uses its binary XCFramework. Its private Swift
+The `4.4.0` Swift package uses its binary XCFramework. Its private Swift
 interfaces expose the `AppstackInternal` SPI used by this bridge. The native
 contract fixture compiles the production bridge against the exact tagged binary
 and must pass before adopting any future binary SDK tag.
@@ -128,20 +128,21 @@ published Android artifact, exercise it against recording JVM stubs, compile
 the production Swift bridge against the exact tagged XCFramework, run its Swift
 contract tests, and verify its exported C symbols.
 
-Run the Phase D player-build fixture as described in
+Run the generated-player validation fixture as described in
 `Tests~/Integration/README.md`. It imports this repository into a clean Unity 6
 project, builds development and minified release Android players, exports and
 compiles an iOS player, and inspects the generated outputs for the required
 bridge, keep-rule, SPM, target-linking, and framework-embedding contracts.
 
-Run the Phase E runtime fixture from the same document on an iPhone Simulator
-and an attached Android target. It launches a clean IL2CPP player against a
-local recording backend and validates configuration, ID/status access, native
-attribution matching, successive callback delivery on Unity's main thread, and
-the exact custom-event wire payload. It uses a dummy API key and must never be
-changed to use production credentials. Android's pinned SDK requires HTTPS for
-`match_url`, so the runner generates and temporarily trusts its own local test
-certificate; that trust resource must remain confined to `Tests~/Integration/`.
+Run the runtime integration fixture from the same document on an iPhone
+Simulator and an attached Android target. It launches a clean IL2CPP player
+against a local recording backend and validates configuration, ID/status
+access, native attribution matching, successive callback delivery on Unity's
+main thread, and the exact custom-event wire payload. It uses a dummy API key
+and must never be changed to use production credentials. Android's pinned SDK
+requires HTTPS for `match_url`, so the runner generates and temporarily trusts
+its own local test certificate; that trust resource must remain confined to
+`Tests~/Integration/`.
 
 Android validation:
 

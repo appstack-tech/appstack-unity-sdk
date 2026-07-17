@@ -7,7 +7,7 @@
 -->
 <dependencies>
   <androidPackages>
-    <androidPackage spec="tech.appstack.android-sdk:appstack-android-sdk:1.5.0-rc1">
+    <androidPackage spec="tech.appstack.android-sdk:appstack-android-sdk:1.5.0">
       <repositories>
         <repository>https://repo1.maven.org/maven2</repository>
         <repository>https://central.sonatype.com/repository/maven-public</repository>
