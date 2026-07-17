@@ -1,4 +1,4 @@
-# Publish Appstack Unity SDK: GitHub Release + UPM-ready package.
+# Publish Appstack Unity SDK: GitHub Release + OpenUPM package.
 # Trigger: push a semantic version tag such as 1.0.0.
 
 name: Release
@@ -10,10 +10,11 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   release:
-    name: Create release and package
+    name: Create release, package, and publish
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -82,3 +83,10 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to OpenUPM
+        uses: openupm/openupm-action@v1
+        with:
+          package: com.appstack.unity-sdk
+          tag: ${{ github.ref_name }}
+          timeout-minutes: 30
