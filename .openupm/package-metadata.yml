@@ -1,23 +1,24 @@
-# OpenUPM package metadata – use this when submitting the package to OpenUPM.
-# Submit via: https://openupm.com/packages/add/
-# Or open a PR to https://github.com/openupm/openupm with this file in data/packages/com.appstack.unity-sdk.yml
-#
-# PR title format: "Create com.appstack.unity-sdk.yml" or "chore(data): new package com.appstack.unity-sdk"
+# Reference copy of the registered OpenUPM metadata. The authoritative file is:
+# https://github.com/openupm/openupm/blob/master/data/packages/com.appstack.unity-sdk.yml
+# Submit future metadata changes there through a pull request.
 
 name: com.appstack.unity-sdk
+aliases: []
 displayName: Appstack SDK
-description: >-
-  Track events and revenue with Apple Search Ads attribution in your Unity app.
-  Same API as the Flutter and React Native Appstack SDKs.
-repoUrl: 'https://github.com/appstack-tech/appstack-unity-sdk'
+description: Unity wrapper for the Appstack native attribution SDKs on iOS and Android.
+repoUrl: https://github.com/appstack-tech/appstack-unity-sdk
+trackingMode: git
 parentRepoUrl: null
 licenseSpdxId: MIT
 licenseName: MIT License
+image: >-
+  https://raw.githubusercontent.com/appstack-tech/appstack-unity-sdk/main/.openupm/cover.png
 topics:
-  - analytics
-  - attribution
-  - utilities
+  - integration
+  - mobile
+  - services
+hunter: jsantelys-as
 gitTagPrefix: ''
 gitTagIgnore: ''
 minVersion: ''
-readme: 'main:README.md'
+readme: main:README.md

@@ -16,6 +16,8 @@ The GitHub Actions workflow packages the root-level UPM contents. It:
   controls the GitHub ZIP, while `.npmignore` applies the same boundary to the
   tarball built by OpenUPM.
 - Describes manual installation through Unity Package Manager.
+- Triggers an OpenUPM scan and waits until the tagged version is installable or
+  OpenUPM reports a build failure.
 
 ## Before tagging
 
@@ -50,11 +52,22 @@ repository checkout.
 1. Commit the generated version files and changelog changes.
 2. Create a semantic version tag matching `package.json`, for example `1.0.0`.
 3. Push the commit and tag.
-4. Confirm the GitHub Actions release job succeeds and its archive passes a
-   clean-project import check.
-5. Confirm the GitHub release notes link to the versioned changelog.
+4. Confirm the GitHub Actions release job succeeds. The job creates the GitHub
+   Release, triggers OpenUPM, and waits for the registry version to become
+   installable.
+5. Confirm the release archive passes a clean-project import check and the
+   GitHub release notes link to the versioned changelog.
 
-OpenUPM builds from the same Git tag after one-time package registration. The
-submission metadata is in `.openupm/package-metadata.yml`. Register
-`com.appstack.unity-sdk` through the OpenUPM add form or its package registry
-repository, then verify the published package metadata and installation.
+The package is already registered with OpenUPM in Git tracking mode. OpenUPM
+builds each version by running `npm pack` on the matching Git tag; it does not
+consume the ZIP attached to the GitHub Release. The workflow uses OpenUPM's
+OIDC-based action, so no OpenUPM token or repository secret is required.
+
+`.openupm/package-metadata.yml` is a reference copy. OpenUPM reads the
+authoritative metadata from the `openupm/openupm` repository. Update listing
+details such as topics, image, repository URL, tag filters, or tracking mode by
+opening a pull request against that repository.
+
+The release workflow intentionally accepts bare stable tags such as `1.0.1`.
+Supporting a prerelease requires updating both `package.json` and the workflow
+tag filter so the parsed tag version remains an exact match.
