@@ -106,6 +106,33 @@ AppstackSDK.Configure(
 `logLevel` accepts `0=DEBUG`, `1=INFO`, `2=WARN`, and `3=ERROR`. iOS has no
 dedicated warning level, so `WARN` behaves like `ERROR` there.
 
+### Set or clear the customer user ID
+
+The customer user ID is your own identifier for the signed-in user. Appstack
+attaches it to events so server-to-server events — which identify the user by
+this ID rather than by the install — can be joined back to the install that
+produced them.
+
+Pass it to `Configure` when you already know it at startup. More often a login
+reveals it afterwards, so set it whenever it becomes known:
+
+```csharp
+AppstackSDK.SetCustomerUserId("user-123"); // on login
+AppstackSDK.ClearCustomerUserId();         // on logout
+```
+
+`SetCustomerUserId(null)` and an empty or whitespace ID also clear it, so
+`ClearCustomerUserId()` is only a more explicit spelling of the same call. Note
+this differs from `Configure`, where an empty `customerUserId` means "not
+provided": `Configure` never clears.
+
+Callable at any time, before or after `Configure`, as often as you like — the
+last call wins. It applies to every event sent from here on, including ones the
+native SDK has buffered but not yet flushed, and does not send anything by
+itself: make sure at least one event follows, or no mapping is ever formed.
+Calling `Configure` again to change the ID does not work — a repeat `Configure`
+is a no-op and its `customerUserId` is ignored.
+
 ### Send standard and custom events
 
 ```csharp

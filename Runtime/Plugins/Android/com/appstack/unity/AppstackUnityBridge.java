@@ -54,6 +54,11 @@ public final class AppstackUnityBridge {
                 emptyToNull(customerUserId));
     }
 
+    /** Empty means "clear the id" here — on configure() it means "not provided". */
+    public static void setCustomerUserId(String customerUserId) {
+        AppstackAttributionSdk.setCustomerUserId(emptyToNull(customerUserId));
+    }
+
     public static void sendEvent(
             String eventType,
             String eventName,

@@ -59,6 +59,10 @@ object AppstackAttributionSdk {
     var configureCall: ConfigureCall? = null
         private set
 
+    /** Every setCustomerUserId argument received, in order — nulls included. */
+    @JvmStatic
+    val customerUserIdCalls: MutableList<String?> = mutableListOf()
+
     @JvmStatic
     var eventCall: EventCall? = null
         private set
@@ -88,6 +92,7 @@ object AppstackAttributionSdk {
     @JvmStatic
     fun reset() {
         configureCall = null
+        customerUserIdCalls.clear()
         eventCall = null
         proxyUrl = null
         recordedAppstackId = null
@@ -119,6 +124,11 @@ object AppstackAttributionSdk {
             logLevel,
             customerUserId,
         )
+    }
+
+    @JvmStatic
+    fun setCustomerUserId(customerUserId: String?) {
+        customerUserIdCalls.add(customerUserId)
     }
 
     @JvmStatic

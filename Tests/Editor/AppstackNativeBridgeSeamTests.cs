@@ -116,6 +116,67 @@ namespace Appstack.Tests
             Assert.That(logHandler.Messages, Has.None.Contains("status failed"));
         }
 
+        [Test]
+        public void SetCustomerUserIdForwardsTrimmedId()
+        {
+            AppstackSDK.SetCustomerUserId("  customer-123  ");
+
+            Assert.That(bridge.CustomerUserIds, Is.EqualTo(new[] { "customer-123" }));
+        }
+
+        // "" is the clear marker on this entry point, so null/blank must arrive as ""
+        // rather than being dropped.
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("   ")]
+        public void SetCustomerUserIdSendsEmptyStringAsTheClearMarker(string customerUserId)
+        {
+            AppstackSDK.SetCustomerUserId(customerUserId);
+
+            Assert.That(bridge.CustomerUserIds, Is.EqualTo(new[] { string.Empty }));
+        }
+
+        [Test]
+        public void ClearCustomerUserIdSendsTheClearMarker()
+        {
+            AppstackSDK.ClearCustomerUserId();
+
+            Assert.That(bridge.CustomerUserIds, Is.EqualTo(new[] { string.Empty }));
+        }
+
+        [Test]
+        public void SetCustomerUserIdAppliesLastWriteWins()
+        {
+            AppstackSDK.SetCustomerUserId("first");
+            AppstackSDK.ClearCustomerUserId();
+            AppstackSDK.SetCustomerUserId("second");
+
+            Assert.That(
+                bridge.CustomerUserIds,
+                Is.EqualTo(new[] { "first", string.Empty, "second" }));
+        }
+
+        [Test]
+        public void SetCustomerUserIdWorksWithoutConfigure()
+        {
+            AppstackSDK.SetCustomerUserId("early-customer");
+
+            Assert.That(bridge.ConfigureCalls, Is.Zero);
+            Assert.That(bridge.CustomerUserIds, Is.EqualTo(new[] { "early-customer" }));
+        }
+
+        [Test]
+        public void SetCustomerUserIdRethrowsBridgeFailure()
+        {
+            bridge.SetCustomerUserIdException = new InvalidOperationException("set id failed");
+
+            var exception = Assert.Throws<InvalidOperationException>(
+                () => AppstackSDK.SetCustomerUserId("customer-123"));
+
+            Assert.That(exception, Is.SameAs(bridge.SetCustomerUserIdException));
+            Assert.That(logHandler.Messages, Has.Some.Contains("set id failed"));
+        }
+
         [TestCaseSource(nameof(AllEventTypes))]
         public void SendEventMapsEveryEventAndDropsStandardEventNames(EventType eventType)
         {
@@ -290,6 +351,8 @@ namespace Appstack.Tests
             public int LogLevel { get; private set; }
             public string CustomerUserId { get; private set; }
             public Exception ConfigureException { get; set; }
+            public List<string> CustomerUserIds { get; } = new List<string>();
+            public Exception SetCustomerUserIdException { get; set; }
             public int SendEventCalls { get; private set; }
             public string EventType { get; private set; }
             public string EventName { get; private set; }
@@ -314,6 +377,12 @@ namespace Appstack.Tests
                 LogLevel = logLevel;
                 CustomerUserId = customerUserId;
                 if (ConfigureException != null) throw ConfigureException;
+            }
+
+            public void SetCustomerUserId(string customerUserId)
+            {
+                CustomerUserIds.Add(customerUserId);
+                if (SetCustomerUserIdException != null) throw SetCustomerUserIdException;
             }
 
             public void SendEvent(string eventType, string eventName, string parametersJson)

@@ -26,6 +26,8 @@ asset; never copy a GUID from an existing metadata file.
 The initial public API is defined by `Runtime/AppstackSDK.cs`:
 
 - `Configure(apiKey, logLevel, customerUserId)`
+- `SetCustomerUserId(customerUserId)`
+- `ClearCustomerUserId()`
 - `SendEvent(eventType, eventName, parameters)`
 - `EnableAppleAdsAttribution()`
 - `GetAppstackId()`
@@ -45,6 +47,13 @@ Cross-platform behavior that must remain aligned:
 - Log levels: `0=DEBUG`, `1=INFO`, `2=WARN`, `3=ERROR`; iOS maps warning to
   error.
 - Only `CUSTOM` events forward a caller-supplied event name.
+- Customer user id: `Configure` treats blank as "not provided" and never clears,
+  while `SetCustomerUserId` treats blank as an explicit clear. Because C# cannot
+  marshal a null string cleanly, the empty string is the clear marker on the
+  `setCustomerUserId` native entry points only, and both bridges map it to
+  null/nil. `ClearCustomerUserId()` is a Unity-only spelling of
+  `SetCustomerUserId(null)`, added because C# call sites read better with it; it
+  adds no behavior the other wrappers lack.
 - Native event-type parsing is case-insensitive and locale-independent.
 - Attribution callbacks support concurrent requests and return to the captured
   synchronization context when available.

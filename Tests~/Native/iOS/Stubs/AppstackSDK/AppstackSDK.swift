@@ -44,6 +44,8 @@ public final class AppstackAttributionSdk {
     public static let shared = AppstackAttributionSdk()
 
     public private(set) var configureCall: ConfigureCall?
+    /// Every `setCustomerUserId` argument received, in order — nils included.
+    public private(set) var customerUserIdCalls: [String?] = []
     public private(set) var eventCall: EventCall?
     public private(set) var proxyUrl: String?
     public var appstackId: String?
@@ -55,6 +57,7 @@ public final class AppstackAttributionSdk {
 
     public func reset() {
         configureCall = nil
+        customerUserIdCalls = []
         eventCall = nil
         proxyUrl = nil
         appstackId = nil
@@ -81,6 +84,10 @@ public final class AppstackAttributionSdk {
             customerUserId: customerUserId,
             wrapperVersion: wrapperVersion
         )
+    }
+
+    public func setCustomerUserId(_ customerUserId: String?) {
+        customerUserIdCalls.append(customerUserId)
     }
 
     public func sendEvent(

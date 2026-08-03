@@ -37,6 +37,15 @@ internal func applyDevelopmentProxy(from bundle: Bundle) {
     }
 }
 
+/// Empty means "clear the id" here — on configure() it means "not provided".
+/// `string(from:)` already maps an empty C string to nil, which is the clear.
+@_cdecl("AppstackUnitySetCustomerUserId")
+public func AppstackUnitySetCustomerUserId(
+    _ customerUserIdPointer: UnsafePointer<CChar>?
+) {
+    AppstackAttributionSdk.shared.setCustomerUserId(string(from: customerUserIdPointer))
+}
+
 @_cdecl("AppstackUnitySendEvent")
 public func AppstackUnitySendEvent(
     _ eventTypePointer: UnsafePointer<CChar>?,
