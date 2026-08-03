@@ -55,8 +55,11 @@ Cross-platform behavior that must remain aligned:
 
 Dependency versions are declared in the platform-specific editor integration:
 
-- Android: `tech.appstack.android-sdk:appstack-android-sdk:1.5.0` in
-  `Editor/AppstackDependencies.xml`
+- Android: `tech.appstack.android-sdk:appstack-android-sdk:1.7.0-SNAPSHOT` in
+  `Editor/AppstackDependencies.xml`. This is a release candidate, pinned so
+  `SetCustomerUserId` can be built against the native setter it bridges (first
+  shipped in 1.7.0). Snapshots are mutable and expire: swap it for the stable
+  release before shipping the package.
 - iOS: `AppstackSDK` Swift package product at `4.4.0` in
   `Editor/AppstackIOSPostProcessBuild.cs`
 

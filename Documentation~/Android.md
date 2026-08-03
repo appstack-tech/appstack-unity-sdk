@@ -30,10 +30,13 @@ to the Gradle templates used by your Unity project:
 repositories {
     mavenCentral()
     maven { url "https://central.sonatype.com/repository/maven-public" }
+    // Only needed while the pinned version below is a -SNAPSHOT release
+    // candidate; maven-public does not serve snapshots.
+    maven { url "https://central.sonatype.com/repository/maven-snapshots" }
 }
 
 dependencies {
-    implementation "tech.appstack.android-sdk:appstack-android-sdk:1.5.0"
+    implementation "tech.appstack.android-sdk:appstack-android-sdk:1.7.0-SNAPSHOT"
 }
 ```
 
