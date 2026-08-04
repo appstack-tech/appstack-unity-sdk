@@ -31,8 +31,13 @@ repositories {
     mavenCentral()
     maven { url "https://central.sonatype.com/repository/maven-public" }
     // Only needed while the pinned version below is a -SNAPSHOT release
-    // candidate; maven-public does not serve snapshots.
-    maven { url "https://central.sonatype.com/repository/maven-snapshots" }
+    // candidate; maven-public does not serve snapshots. Scoped to Appstack
+    // snapshots so no other dependency can resolve from a mutable repository.
+    maven {
+        url "https://central.sonatype.com/repository/maven-snapshots"
+        mavenContent { snapshotsOnly() }
+        content { includeGroup "tech.appstack.android-sdk" }
+    }
 }
 
 dependencies {
