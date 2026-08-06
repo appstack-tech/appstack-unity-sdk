@@ -9,7 +9,9 @@ package artifact.
 The Android fixture has two modules:
 
 - `real-artifact` compiles the production Java bridge against
-  `tech.appstack.android-sdk:appstack-android-sdk:1.5.0`.
+  `tech.appstack.android-sdk:appstack-android-sdk:1.7.0-SNAPSHOT`, which must
+  match `Editor/AppstackDependencies.xml`. Release candidates resolve from the
+  Central Portal snapshot repository declared in `settings.gradle.kts`.
 - `contract-tests` compiles the same bridge against recording stubs and tests
   configuration, proxy metadata, log/event mapping, JSON conversion, getters,
   and immediate, suspended, and failed coroutine completion.

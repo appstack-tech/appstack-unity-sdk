@@ -21,5 +21,7 @@ android {
 }
 
 dependencies {
-    implementation("tech.appstack.android-sdk:appstack-android-sdk:1.5.0")
+    // Must match Editor/AppstackDependencies.xml: this module exists to compile the
+    // real bridge against the real artifact the package resolves at runtime.
+    implementation("tech.appstack.android-sdk:appstack-android-sdk:1.7.0-SNAPSHOT")
 }

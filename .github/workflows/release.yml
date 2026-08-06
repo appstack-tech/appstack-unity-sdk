@@ -60,6 +60,17 @@ jobs:
             cp -R "$entry" "$PACKAGE_ROOT/"
           done
 
+          # A -SNAPSHOT coordinate is mutable and expires, so a release must never
+          # ship one: the published package would change under integrators, or stop
+          # resolving altogether. Developing against a release candidate is fine —
+          # the pin just has to be a plain release version by the time a tag is cut.
+          # Scanning the assembled package covers the dependency declaration and any
+          # setup documentation that names it, without a path list to keep in sync.
+          if grep -rn -- '-SNAPSHOT' "$PACKAGE_ROOT"; then
+            echo "::error::The package would ship a -SNAPSHOT native dependency (see matches above). Move the pin to a released version before tagging."
+            exit 1
+          fi
+
           (cd dist && zip -q -r "../${PACKAGE_NAME}.zip" "$PACKAGE_NAME")
           echo "package_name=${PACKAGE_NAME}.zip" >> "$GITHUB_ENV"
 
