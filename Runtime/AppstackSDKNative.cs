@@ -18,6 +18,11 @@ namespace Appstack
             bridge.Configure(apiKey, logLevel, customerUserId);
         }
 
+        public static void SetCustomerUserId(string customerUserId)
+        {
+            bridge.SetCustomerUserId(customerUserId);
+        }
+
         public static void SendEvent(string eventType, string eventName, string parametersJson)
         {
             bridge.SendEvent(eventType, eventName, parametersJson);
@@ -107,6 +112,11 @@ namespace Appstack
                     AppstackVersion.WrapperVersion);
             }
 
+            public void SetCustomerUserId(string customerUserId)
+            {
+                AppstackAndroidBridge.SetCustomerUserId(customerUserId);
+            }
+
             public void SendEvent(string eventType, string eventName, string parametersJson)
             {
                 AppstackAndroidBridge.SendEvent(eventType, eventName, parametersJson);
@@ -148,6 +158,11 @@ namespace Appstack
                     AppstackVersion.WrapperVersion);
             }
 
+            public void SetCustomerUserId(string customerUserId)
+            {
+                AppstackIOSBridge.SetCustomerUserId(customerUserId);
+            }
+
             public void SendEvent(string eventType, string eventName, string parametersJson)
             {
                 AppstackIOSBridge.SendEvent(eventType, eventName, parametersJson);
@@ -181,6 +196,11 @@ namespace Appstack
             public bool ReportsConfigurationStatus => false;
 
             public void Configure(string apiKey, int logLevel, string customerUserId)
+            {
+                // Intentionally ignored outside supported mobile players.
+            }
+
+            public void SetCustomerUserId(string customerUserId)
             {
                 // Intentionally ignored outside supported mobile players.
             }

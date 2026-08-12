@@ -48,6 +48,14 @@ namespace Appstack
             }
         }
 
+        public static void SetCustomerUserId(string customerUserId)
+        {
+            // Empty reaches Java as the clear marker; never marshal a null string.
+            UnityBridge.Value.CallStatic(
+                "setCustomerUserId",
+                customerUserId ?? string.Empty);
+        }
+
         public static void SendEvent(string eventType, string eventName, string parametersJson)
         {
             UnityBridge.Value.CallStatic(

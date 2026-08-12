@@ -110,6 +110,7 @@ xcrun swiftc \
 
 EXPECTED_SYMBOLS=(
     AppstackUnityConfigure
+    AppstackUnitySetCustomerUserId
     AppstackUnitySendEvent
     AppstackUnityEnableAppleAdsAttribution
     AppstackUnityGetAppstackId

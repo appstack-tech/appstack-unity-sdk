@@ -72,6 +72,36 @@ class AppstackUnityBridgeContractTest {
         assertEquals("http://127.0.0.1:9090", AppstackAttributionSdk.proxyUrl)
     }
 
+    @Test
+    fun `setCustomerUserId forwards the id and never configures`() {
+        AppstackUnityBridge.setCustomerUserId("customer-123")
+
+        assertEquals(listOf("customer-123"), AppstackAttributionSdk.customerUserIdCalls)
+        assertNull(AppstackAttributionSdk.configureCall)
+    }
+
+    // "" is Unity's clear marker: C# normalizes null and blank to it before marshalling.
+    @Test
+    fun `setCustomerUserId treats blank as a clear`() {
+        AppstackUnityBridge.setCustomerUserId("")
+        AppstackUnityBridge.setCustomerUserId("   ")
+        AppstackUnityBridge.setCustomerUserId(null)
+
+        assertEquals(listOf(null, null, null), AppstackAttributionSdk.customerUserIdCalls)
+    }
+
+    @Test
+    fun `setCustomerUserId keeps last-write ordering`() {
+        AppstackUnityBridge.setCustomerUserId("first")
+        AppstackUnityBridge.setCustomerUserId("")
+        AppstackUnityBridge.setCustomerUserId("second")
+
+        assertEquals(
+            listOf("first", null, "second"),
+            AppstackAttributionSdk.customerUserIdCalls,
+        )
+    }
+
     @ParameterizedTest
     @MethodSource("knownEvents")
     fun `sendEvent maps every known event`(eventType: EventType) {

@@ -12,6 +12,9 @@ namespace Appstack
 
         void Configure(string apiKey, int logLevel, string customerUserId);
 
+        /// <summary>An empty <paramref name="customerUserId"/> clears the stored id.</summary>
+        void SetCustomerUserId(string customerUserId);
+
         void SendEvent(string eventType, string eventName, string parametersJson);
 
         void EnableAppleAdsAttribution();

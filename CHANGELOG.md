@@ -14,6 +14,14 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 - Support for iOS 15.0+ through Appstack iOS SDK `4.5.0` and Android API level
   21+ through Appstack Android SDK `1.7.0`.
 - SDK configuration with an API key, log level, and optional customer user ID.
+- `SetCustomerUserId(customerUserId)` and `ClearCustomerUserId()` for setting or
+  clearing the customer user ID after `Configure()`, bridging the native
+  iOS/Android setter of the same name. Use them when a login reveals the ID: a
+  repeat `Configure()` is a no-op and ignores its `customerUserId`. `null`, an
+  empty string, and whitespace all clear the stored ID, so
+  `ClearCustomerUserId()` is the explicit spelling of `SetCustomerUserId(null)`
+  rather than separate behavior. This differs from `Configure()`, where an empty
+  `customerUserId` means "not provided" because it never clears.
 - Standard and custom event tracking with optional event parameters.
 - Apple Ads attribution on iOS.
 - Appstack ID, SDK status, and asynchronous attribution-parameter retrieval.

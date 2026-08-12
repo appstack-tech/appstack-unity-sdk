@@ -13,6 +13,10 @@ namespace Appstack
     /// // Configure the SDK
     /// AppstackSDK.Configure("your-api-key");
     ///
+    /// // Set the customer user ID later (e.g. on login), or clear it on logout
+    /// AppstackSDK.SetCustomerUserId("user-123");
+    /// AppstackSDK.ClearCustomerUserId();
+    ///
     /// // Send events
     /// AppstackSDK.SendEvent(EventType.PURCHASE, parameters: new Dictionary&lt;string, object&gt; { { "revenue", 29.99 }, { "currency", "USD" } });
     ///
@@ -70,6 +74,40 @@ namespace Appstack
                     // Configuration itself succeeded; status reporting is best-effort.
                 }
             }
+        }
+
+        /// <summary>
+        /// Set — or clear — the customer user ID after <see cref="Configure"/>, e.g. once a
+        /// login reveals it. A repeat <see cref="Configure"/> is a no-op, so it cannot be
+        /// used to change the ID. Safe to call at any time; last write wins.
+        /// </summary>
+        /// <param name="customerUserId">Your identifier for the signed-in user. `null`, an
+        /// empty string, or whitespace clears it — see <see cref="ClearCustomerUserId"/>.</param>
+        public static void SetCustomerUserId(string customerUserId)
+        {
+            try
+            {
+                // "" is the clear marker on this entry point. It is unambiguous here because
+                // the setter has its own native function — on Configure, "" means "not
+                // provided" instead, and never clears. Sending "" rather than null also keeps
+                // the marshalled argument well-defined on both platforms.
+                AppstackSDKNative.SetCustomerUserId(customerUserId?.Trim() ?? "");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[AppstackSDK] SetCustomerUserId failed: {e.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Clear the stored customer user ID — call this on logout, otherwise the previous
+        /// user's ID stays attached to every later event. Equivalent to
+        /// <c>SetCustomerUserId(null)</c>.
+        /// </summary>
+        public static void ClearCustomerUserId()
+        {
+            SetCustomerUserId(null);
         }
 
         /// <summary>

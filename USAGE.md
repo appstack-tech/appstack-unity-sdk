@@ -38,6 +38,26 @@ AppstackSDK.Configure(
 );
 ```
 
+## Customer user ID
+
+When the ID is only known after `Configure` — usually after a login — set it
+then. A repeat `Configure` is a no-op and ignores its `customerUserId`, so it
+cannot be used to change the ID.
+
+```csharp
+AppstackSDK.SetCustomerUserId("user-123"); // on login
+AppstackSDK.ClearCustomerUserId();         // on logout
+```
+
+`SetCustomerUserId(null)`, `""`, and whitespace all clear the ID too;
+`ClearCustomerUserId()` is just the explicit spelling. (On `Configure`, an empty
+`customerUserId` means "not provided" instead — `Configure` never clears.)
+
+Safe to call at any time, from any thread, as often as you like — last write
+wins. Clearing on logout matters: otherwise the previous user's ID stays
+attached to every later event. The call sends nothing by itself, so make sure at
+least one event follows.
+
 ## Event tracking
 
 ### Standard events

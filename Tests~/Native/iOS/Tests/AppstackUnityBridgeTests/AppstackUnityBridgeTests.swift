@@ -77,6 +77,43 @@ final class AppstackUnityBridgeTests: XCTestCase {
         XCTAssertNil(AppstackAttributionSdk.shared.configureCall?.wrapperVersion)
     }
 
+    func testSetCustomerUserIdForwardsIdAndTreatsEmptyAsClear() {
+        callSetCustomerUserId("customer-123")
+        XCTAssertEqual(
+            AppstackAttributionSdk.shared.customerUserIdCalls,
+            ["customer-123"]
+        )
+
+        // "" is Unity's clear marker; nil arrives when C# never had a value at all.
+        AppstackAttributionSdk.shared.reset()
+        callSetCustomerUserId("")
+        callSetCustomerUserId(nil)
+        XCTAssertEqual(
+            AppstackAttributionSdk.shared.customerUserIdCalls.count,
+            2
+        )
+        XCTAssertNil(AppstackAttributionSdk.shared.customerUserIdCalls[0])
+        XCTAssertNil(AppstackAttributionSdk.shared.customerUserIdCalls[1])
+    }
+
+    func testSetCustomerUserIdKeepsLastWriteOrdering() {
+        callSetCustomerUserId("first")
+        callSetCustomerUserId("")
+        callSetCustomerUserId("second")
+
+        let calls = AppstackAttributionSdk.shared.customerUserIdCalls
+        XCTAssertEqual(calls.count, 3)
+        XCTAssertEqual(calls[0], "first")
+        XCTAssertNil(calls[1])
+        XCTAssertEqual(calls[2], "second")
+    }
+
+    func testSetCustomerUserIdDoesNotTouchConfigure() {
+        callSetCustomerUserId("customer-123")
+
+        XCTAssertNil(AppstackAttributionSdk.shared.configureCall)
+    }
+
     func testDevelopmentProxyReadsExpectedInfoPlistKey() throws {
         let bundleUrl = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
@@ -215,6 +252,12 @@ final class AppstackUnityBridgeTests: XCTestCase {
                     )
                 }
             }
+        }
+    }
+
+    private func callSetCustomerUserId(_ customerUserId: String?) {
+        withOptionalCString(customerUserId) { pointer in
+            AppstackUnitySetCustomerUserId(pointer)
         }
     }
 

@@ -17,6 +17,8 @@ namespace Appstack.Tests
             try
             {
                 AppstackSDK.Configure("api-key");
+                AppstackSDK.SetCustomerUserId("customer-123");
+                AppstackSDK.ClearCustomerUserId();
                 AppstackSDK.SendEvent(EventType.LOGIN);
                 AppstackSDK.EnableAppleAdsAttribution();
 

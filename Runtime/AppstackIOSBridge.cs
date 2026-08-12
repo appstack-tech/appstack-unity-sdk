@@ -28,6 +28,9 @@ namespace Appstack
             string wrapperVersion);
 
         [DllImport("__Internal")]
+        private static extern void AppstackUnitySetCustomerUserId(string customerUserId);
+
+        [DllImport("__Internal")]
         private static extern void AppstackUnitySendEvent(
             string eventType,
             string eventName,
@@ -57,6 +60,12 @@ namespace Appstack
             string wrapperVersion)
         {
             AppstackUnityConfigure(apiKey, logLevel, customerUserId, wrapperVersion);
+        }
+
+        public static void SetCustomerUserId(string customerUserId)
+        {
+            // Empty reaches Swift as the clear marker; never marshal a null string.
+            AppstackUnitySetCustomerUserId(customerUserId ?? string.Empty);
         }
 
         public static void SendEvent(string eventType, string eventName, string parametersJson)
