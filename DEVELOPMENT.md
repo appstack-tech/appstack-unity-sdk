@@ -104,6 +104,11 @@ interfaces expose the `AppstackInternal` SPI used by this bridge. The native
 contract fixture compiles the production bridge against the exact tagged binary
 and must pass before adopting any future binary SDK tag.
 
+That binary is the checksummed release artifact named by the tag's
+`binaryTarget(url:checksum:)`, not the `AppstackSDK.xcframework` directory still
+committed in the distribution repository. The committed directory is vestigial
+and does not track the tag, so it must not be used to validate a pin.
+
 Do not manually add Apple system frameworks in the Unity postprocessor; the
 native Swift package owns its linker requirements.
 
