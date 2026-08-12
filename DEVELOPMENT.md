@@ -64,12 +64,9 @@ Cross-platform behavior that must remain aligned:
 
 Dependency versions are declared in the platform-specific editor integration:
 
-- Android: `tech.appstack.android-sdk:appstack-android-sdk:1.7.0-SNAPSHOT` in
-  `Editor/AppstackDependencies.xml`. This is a release candidate, pinned so
-  `SetCustomerUserId` can be built against the native setter it bridges (first
-  shipped in 1.7.0). Snapshots are mutable and expire: swap it for the stable
-  release before shipping the package.
-- iOS: `AppstackSDK` Swift package product at `4.4.0` in
+- Android: `tech.appstack.android-sdk:appstack-android-sdk:1.7.0` in
+  `Editor/AppstackDependencies.xml`
+- iOS: `AppstackSDK` Swift package product at `4.5.0` in
   `Editor/AppstackIOSPostProcessBuild.cs`
 
 When either native dependency changes, update the corresponding editor
@@ -111,10 +108,15 @@ the application target so Xcode embeds and signs the dynamic framework. It also
 sets the Swift language version and enables Swift standard-library embedding on
 the application target.
 
-The `4.4.0` Swift package uses its binary XCFramework. Its private Swift
+The `4.5.0` Swift package uses its binary XCFramework. Its private Swift
 interfaces expose the `AppstackInternal` SPI used by this bridge. The native
 contract fixture compiles the production bridge against the exact tagged binary
 and must pass before adopting any future binary SDK tag.
+
+That binary is the checksummed release artifact named by the tag's
+`binaryTarget(url:checksum:)`, not the `AppstackSDK.xcframework` directory still
+committed in the distribution repository. The committed directory is vestigial
+and does not track the tag, so it must not be used to validate a pin.
 
 Do not manually add Apple system frameworks in the Unity postprocessor; the
 native Swift package owns its linker requirements.
