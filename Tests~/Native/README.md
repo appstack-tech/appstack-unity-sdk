@@ -27,19 +27,28 @@ The Android 35 SDK, JDK 17, Google Maven, and Maven Central must be available.
 
 The iOS runner copies the production Swift bridge into a temporary Swift package.
 It first runs deterministic XCTest cases against a recording `AppstackSDK` module,
-then extracts the exact `4.5.0` XCFramework from an `ios-appstack-sdk` checkout,
-compiles the production bridge for an iOS 15 simulator target, and checks every
-expected C ABI symbol with `nm`.
+then resolves the exact `4.5.0` XCFramework, compiles the production bridge for an
+iOS 15 simulator target, and checks every expected C ABI symbol with `nm`.
 
 ```sh
 APPSTACK_IOS_DISTRIBUTION_REPO=/path/to/ios-appstack-sdk \
   Tests~/Native/iOS/run-tests.sh
 ```
 
-Passing a checkout is the form to prefer, because only that form pins the tag.
+Given a checkout, the runner resolves the binary the same way SPM does: it reads
+the `binaryTarget` URL and checksum from `Package.swift` at the tag, downloads
+that release artifact, and refuses to continue unless the checksum matches. This
+form is the one to prefer, and it needs network access.
+
+It deliberately does not read the `AppstackSDK.xcframework` directory committed
+in the distribution repository. That directory is vestigial after the move to
+`binaryTarget(url:checksum:)` — it is byte-identical across `4.4.0` through
+`4.5.0` and does not track the tag — so reading it compiles the bridge against
+stale bits while appearing to test the pinned version.
+
 The runner also accepts a path to an XCFramework or to a directory containing
-one, as a local escape hatch; an XCFramework carries no trustworthy marketing
-version, so those inputs cannot be checked against the pin and the runner says
-so instead of claiming a verified version.
+one, as a local escape hatch. An XCFramework carries no trustworthy marketing
+version, so those inputs cannot be checked against the pin and the runner
+reports them as unverified rather than claiming a version.
 
 Xcode with an iOS Simulator SDK and Swift 5.9 or newer is required.

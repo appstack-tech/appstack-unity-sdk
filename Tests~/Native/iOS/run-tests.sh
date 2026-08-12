@@ -28,13 +28,49 @@ EXPECTED_SDK_VERSION="4.5.0"
 EXACT_SDK_DIR="$TEMP_DIR/exact-sdk"
 mkdir -p "$EXACT_SDK_DIR"
 if [[ -d "$SDK_INPUT/.git" || -f "$SDK_INPUT/.git" ]]; then
-    git -C "$SDK_INPUT" archive "$EXPECTED_SDK_VERSION" AppstackSDK.xcframework \
-        | tar -x -C "$EXACT_SDK_DIR"
+    # Resolve the binary the way SPM does, from the binaryTarget the tag declares.
+    # The distribution repo also still carries a committed AppstackSDK.xcframework
+    # directory, but it is vestigial: it is byte-identical across 4.4.0 through
+    # 4.5.0 and does not track the tag. Reading it made this fixture silently
+    # compile against stale bits while reporting the pinned version, so resolve
+    # the declared URL and enforce the declared checksum instead.
+    PACKAGE_MANIFEST="$TEMP_DIR/distribution-Package.swift"
+    git -C "$SDK_INPUT" show "${EXPECTED_SDK_VERSION}:Package.swift" > "$PACKAGE_MANIFEST"
+
+    BINARY_URL="$(sed -n 's/.*url:[[:space:]]*"\([^"]*\)".*/\1/p' "$PACKAGE_MANIFEST" | head -1)"
+    DECLARED_CHECKSUM="$(sed -n 's/.*checksum:[[:space:]]*"\([^"]*\)".*/\1/p' "$PACKAGE_MANIFEST" | head -1)"
+
+    if [[ -z "$BINARY_URL" || -z "$DECLARED_CHECKSUM" ]]; then
+        echo "Could not read a binaryTarget url and checksum from Package.swift at $EXPECTED_SDK_VERSION."
+        exit 5
+    fi
+
+    if [[ "$BINARY_URL" != *"/download/${EXPECTED_SDK_VERSION}/"* ]]; then
+        echo "Package.swift at $EXPECTED_SDK_VERSION points at an unexpected release: $BINARY_URL"
+        exit 6
+    fi
+
+    ARCHIVE="$TEMP_DIR/AppstackSDK.xcframework.zip"
+    if ! curl -fsSL -o "$ARCHIVE" "$BINARY_URL"; then
+        echo "Failed to download the pinned XCFramework from $BINARY_URL"
+        exit 7
+    fi
+
+    ACTUAL_CHECKSUM="$(shasum -a 256 "$ARCHIVE" | awk '{print $1}')"
+    if [[ "$ACTUAL_CHECKSUM" != "$DECLARED_CHECKSUM" ]]; then
+        echo "Checksum mismatch for $BINARY_URL"
+        echo "  declared: $DECLARED_CHECKSUM"
+        echo "  actual:   $ACTUAL_CHECKSUM"
+        exit 8
+    fi
+
+    unzip -q "$ARCHIVE" -d "$EXACT_SDK_DIR"
     XCFRAMEWORK="$EXACT_SDK_DIR/AppstackSDK.xcframework"
-    # Only this branch pins a tag, so only this branch can claim a version. An
-    # XCFramework carries no trustworthy marketing version (CFBundleShortVersionString
-    # is 1.0), so a caller-supplied binary cannot be checked against the pin.
-    VERIFIED_AGAINST="AppstackSDK $EXPECTED_SDK_VERSION"
+    # Only this branch resolves and checksums the pinned artifact, so only this
+    # branch can claim a version. An XCFramework carries no trustworthy marketing
+    # version (CFBundleShortVersionString is 1.0), so a caller-supplied binary
+    # cannot be checked against the pin.
+    VERIFIED_AGAINST="AppstackSDK $EXPECTED_SDK_VERSION (checksum-verified release artifact)"
 elif [[ "$SDK_INPUT" == *.xcframework ]]; then
     XCFRAMEWORK="$SDK_INPUT"
     VERIFIED_AGAINST="the supplied XCFramework at $SDK_INPUT (version not verified)"
