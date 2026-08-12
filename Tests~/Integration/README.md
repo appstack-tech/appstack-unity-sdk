@@ -119,8 +119,9 @@ The machine-readable runtime probe and request validator prove that:
   Unity main thread;
 - after remote configuration is observably ready, a custom event and a
   standard event reach the native HTTP wire boundary;
-- `customer_user_id`, `unity-1.0.0`, numbers, booleans, arrays, nested maps,
-  and UTF-8 strings retain their expected wire representation.
+- `customer_user_id`, the `unity-<package version>` wrapper version, numbers,
+  booleans, arrays, nested maps, and UTF-8 strings retain their expected wire
+  representation.
 
 The backend also records native lifecycle or install events, but their exact
 count is deliberately not asserted because it is native-SDK state dependent.

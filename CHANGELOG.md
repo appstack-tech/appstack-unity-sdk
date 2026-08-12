@@ -7,13 +7,10 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-08-12
+
 ### Added
 
-- Initial Unity Package Manager distribution as `com.appstack.unity-sdk` for
-  Unity 6 (`6000.0`) or newer.
-- Support for iOS 15.0+ through Appstack iOS SDK `4.5.0` and Android API level
-  21+ through Appstack Android SDK `1.7.0`.
-- SDK configuration with an API key, log level, and optional customer user ID.
 - `SetCustomerUserId(customerUserId)` and `ClearCustomerUserId()` for setting or
   clearing the customer user ID after `Configure()`, bridging the native
   iOS/Android setter of the same name. Use them when a login reveals the ID: a
@@ -22,6 +19,25 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
   `ClearCustomerUserId()` is the explicit spelling of `SetCustomerUserId(null)`
   rather than separate behavior. This differs from `Configure()`, where an empty
   `customerUserId` means "not provided" because it never clears.
+
+### Changed
+
+- Pinned native SDKs are now Appstack iOS SDK `4.5.0` (from `4.4.0`) and
+  Appstack Android SDK `1.7.0` (from `1.5.0`). Platform floors are unchanged:
+  iOS 15.0+ and Android API level 21+.
+- `SendEvent(EventType.INSTALL)` is a no-op. `EventType.INSTALL` is emitted
+  automatically by the native SDKs on first launch, and both new pinned versions
+  discard a manually sent `INSTALL`; the previous pins accepted it.
+
+## [1.0.0] - 2026-07-17
+
+### Added
+
+- Initial Unity Package Manager distribution as `com.appstack.unity-sdk` for
+  Unity 6 (`6000.0`) or newer.
+- Support for iOS 15.0+ through Appstack iOS SDK `4.4.0` and Android API level
+  21+ through Appstack Android SDK `1.5.0`.
+- SDK configuration with an API key, log level, and optional customer user ID.
 - Standard and custom event tracking with optional event parameters.
 - Apple Ads attribution on iOS.
 - Appstack ID, SDK status, and asynchronous attribution-parameter retrieval.
@@ -32,9 +48,3 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 - Automatic Android native dependency resolution through EDM4U.
 - Automatic Android R8/ProGuard configuration with no custom keep-rules step.
 - Basic Integration sample for manual SDK configuration and event tracking.
-
-### Notes
-
-- `EventType.INSTALL` is emitted automatically by the native SDKs on first
-  launch. Both pinned native versions discard a manually sent `INSTALL`, so
-  `SendEvent(EventType.INSTALL)` is a no-op.

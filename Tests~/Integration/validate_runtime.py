@@ -5,6 +5,12 @@ from pathlib import Path
 
 
 RESULT_PREFIX = "APPSTACK_RUNTIME_RESULT:"
+PACKAGE_MANIFEST = Path(__file__).resolve().parents[2] / "package.json"
+
+
+def expected_wrapper_version() -> str:
+    version = json.loads(PACKAGE_MANIFEST.read_text(encoding="utf-8"))["version"]
+    return f"unity-{version}"
 
 
 def require(condition: bool, message: str) -> None:
@@ -48,7 +54,9 @@ def main() -> None:
     login = next((event for event in events if event.get("event_name") == "LOGIN"), None)
     require(custom is not None, "custom event never reached the native wire boundary")
     require(login is not None, "standard event never reached the native wire boundary")
-    require(custom.get("wrapper_version") == "unity-1.0.0", "wrong wrapper version on event")
+    wrapper_version = expected_wrapper_version()
+    require(custom.get("wrapper_version") == wrapper_version,
+            f"wrong wrapper version on event, expected {wrapper_version}")
     require(custom.get("customer_user_id") == "runtime-validation-user",
             "customer ID was not forwarded")
 
