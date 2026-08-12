@@ -45,13 +45,26 @@ if [[ -d "$SDK_INPUT/.git" || -f "$SDK_INPUT/.git" ]]; then
         exit 5
     fi
 
-    if [[ "$BINARY_URL" != *"/download/${EXPECTED_SDK_VERSION}/"* ]]; then
-        echo "Package.swift at $EXPECTED_SDK_VERSION points at an unexpected release: $BINARY_URL"
+    # Anchor the whole origin, not just the path: a substring match would accept
+    # any host that happens to carry /download/<version>/, and the checksum comes
+    # from the same manifest, so it proves integrity against whatever that
+    # manifest claims rather than provenance. This origin is the same one
+    # Editor/AppstackIOSPostProcessBuild.cs pins, so asserting it here keeps the
+    # fixture checking the artifact a Unity build would actually resolve.
+    EXPECTED_RELEASE_PREFIX="https://github.com/appstack-tech/ios-appstack-sdk/releases/download/${EXPECTED_SDK_VERSION}/"
+    if [[ "$BINARY_URL" != "$EXPECTED_RELEASE_PREFIX"* ]]; then
+        echo "Package.swift at $EXPECTED_SDK_VERSION does not point at the expected release."
+        echo "  expected prefix: $EXPECTED_RELEASE_PREFIX"
+        echo "  declared url:    $BINARY_URL"
         exit 6
     fi
 
+    # Bounded and retried: this fixture reaches the network, so a stalled or
+    # flaky download must fail on its own rather than hang until the outer CI
+    # timeout.
     ARCHIVE="$TEMP_DIR/AppstackSDK.xcframework.zip"
-    if ! curl -fsSL -o "$ARCHIVE" "$BINARY_URL"; then
+    if ! curl -fsSL --connect-timeout 15 --max-time 300 --retry 3 --retry-delay 2 \
+        -o "$ARCHIVE" "$BINARY_URL"; then
         echo "Failed to download the pinned XCFramework from $BINARY_URL"
         exit 7
     fi
