@@ -21,13 +21,11 @@ public sealed class AppstackRuntimeProbe : MonoBehaviour
     {
         mainThreadId = Thread.CurrentThread.ManagedThreadId;
 
-        Appstack.AppstackSDK.Configure(
-            "runtime-validation-local-key",
-            logLevel: 0,
-            customerUserId: "runtime-validation-user");
+        // Auto-initialization runs before this scene. The application-owned user ID
+        // remains a separate login-time concern.
+        Appstack.AppstackSDK.SetCustomerUserId("runtime-validation-user");
 
         var appstackId = Appstack.AppstackSDK.GetAppstackId();
-        Appstack.AppstackSDK.EnableAppleAdsAttribution();
 
         for (var index = 0; index < ExpectedCallbacks; index++)
         {

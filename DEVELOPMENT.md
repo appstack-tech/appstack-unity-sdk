@@ -59,6 +59,33 @@ Cross-platform behavior that must remain aligned:
   synchronization context when available.
 - Strings crossing the iOS C boundary are UTF-8 and must be released through
   the matching bridge function.
+- The first successful `Configure` call wins inside the Unity wrapper. Exact
+  repeats are silent, conflicting repeats warn without logging credentials, and
+  native failures remain retryable.
+
+## Auto-initialization architecture
+
+`AppstackAutoInitializationSettings` is an internal runtime `ScriptableObject`
+created at `Assets/Appstack/Resources/AppstackSettings.asset` through **Edit →
+Project Settings → Appstack**. Do not add a public create-asset menu: the
+provider owns the single canonical asset and installing the package must not
+create it.
+
+`AppstackAutoInitializer` loads the asset before the first scene and resolves
+the current platform and environment without a scene object. The runtime
+assembly is marked `AlwaysLinkAssembly`, and the startup type and callback are
+preserved for IL2CPP stripping. Missing settings, disabled auto-init, disabled
+platforms, the Editor, and unsupported platforms are intentional no-ops.
+
+Automatic environment selection uses `Debug.isDebugBuild`; Editor build
+validation uses the `BuildOptions.Development` flag. Development may use its
+production key only through the explicit fallback setting, while production
+never falls back. The pre-build validator checks only the current target and
+blocks enabled auto-init builds whose key cannot resolve.
+
+The settings must never contain a customer user ID. That value remains owned by
+the application's login/logout lifecycle. Build Profile overrides, CI key
+injection, and environment variables are intentionally deferred.
 
 ## Native dependencies
 

@@ -14,6 +14,8 @@ using UnityEditor.iOS.Xcode;
 internal static class AppstackIntegrationBuild
 {
     private const string ScenePath = "Assets/AppstackIntegration.unity";
+    private const string SettingsPath =
+        "Assets/Appstack/Resources/AppstackSettings.asset";
     private const string PackageId = "com.appstack.unity-sdk";
     private const string AndroidBridgePath =
         "Packages/com.appstack.unity-sdk/Runtime/Plugins/Android/com/appstack/unity/AppstackUnityBridge.java";
@@ -140,6 +142,10 @@ internal static class AppstackIntegrationBuild
 
     private static void ConfigureSharedProject(Type probeType, string applicationIdentifier)
     {
+        ConfigureAutoInitializationSettings(probeType == typeof(AppstackRuntimeProbe)
+            ? "runtime-validation-local-key"
+            : "player-validation-build-only-key");
+
         var validationName = probeType == typeof(AppstackRuntimeProbe)
             ? "Runtime Validation"
             : "Player Validation";
@@ -165,6 +171,41 @@ internal static class AppstackIntegrationBuild
         {
             new EditorBuildSettingsScene(ScenePath, true)
         };
+        AssetDatabase.SaveAssets();
+    }
+
+    private static void ConfigureAutoInitializationSettings(string apiKey)
+    {
+        if (!AssetDatabase.IsValidFolder("Assets/Appstack"))
+        {
+            AssetDatabase.CreateFolder("Assets", "Appstack");
+        }
+        if (!AssetDatabase.IsValidFolder("Assets/Appstack/Resources"))
+        {
+            AssetDatabase.CreateFolder("Assets/Appstack", "Resources");
+        }
+        var settingsType = typeof(Appstack.AppstackSDK).Assembly.GetType(
+            "Appstack.AppstackAutoInitializationSettings",
+            throwOnError: true);
+        var settings = AssetDatabase.LoadAssetAtPath<ScriptableObject>(SettingsPath);
+        if (settings == null)
+        {
+            settings = ScriptableObject.CreateInstance(settingsType);
+            AssetDatabase.CreateAsset(settings, SettingsPath);
+        }
+
+        var serialized = new SerializedObject(settings);
+        serialized.FindProperty("autoInitialize").boolValue = true;
+        serialized.FindProperty("iosEnabled").boolValue = true;
+        serialized.FindProperty("androidEnabled").boolValue = true;
+        serialized.FindProperty("logLevel").enumValueIndex = 0;
+        serialized.FindProperty("enableAppleAdsAttribution").boolValue = true;
+        serialized.FindProperty("iosDevelopmentApiKey").stringValue = apiKey;
+        serialized.FindProperty("iosProductionApiKey").stringValue = apiKey;
+        serialized.FindProperty("androidDevelopmentApiKey").stringValue = apiKey;
+        serialized.FindProperty("androidProductionApiKey").stringValue = apiKey;
+        serialized.ApplyModifiedPropertiesWithoutUndo();
+        EditorUtility.SetDirty(settings);
         AssetDatabase.SaveAssets();
     }
 

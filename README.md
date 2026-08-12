@@ -51,8 +51,33 @@ Appstack Unity package does not install EDM4U automatically.
 
 ## Quick start
 
+### Automatic initialization
+
+Open **Edit → Project Settings → Appstack**, select **Create Appstack
+Settings**, and enter the development and production API keys for each platform
+you ship. Appstack initializes before the first scene without requiring a
+GameObject or startup script.
+
+By default, Unity Development Builds use the development key and other builds
+use the production key. The environment can instead be pinned to Development or
+Production. **Allow Production Fallback** lets a development build use its
+production key when no development key is configured; this is explicit and
+disabled by default. Production builds never fall back to a development key.
+
+iOS and Android can be enabled independently. A build is blocked only when
+auto-initialization and its current target platform are enabled but no key can
+be resolved for that build. Missing keys for another platform do not affect the
+build.
+
+Creating settings opts the project into auto-initialization. Installing the
+package alone creates no settings and changes no runtime behavior.
+
+### Manual initialization
+
+For consent flows, custom bootstrap ordering, or remotely supplied
+configuration, leave the settings asset absent or turn off **Auto Initialize**.
 Call `Configure` once during application startup and before using other SDK
-methods.
+methods:
 
 ```csharp
 using System.Collections.Generic;
@@ -90,6 +115,14 @@ public sealed class AppstackInitializer : MonoBehaviour
     }
 }
 ```
+
+The first successful automatic or manual configuration wins. Repeating the
+same configuration is a silent no-op; a conflicting repeat is ignored with a
+warning that does not expose either API key. Failed configuration attempts may
+be retried.
+
+API keys stored in Unity settings are serialized into the project and player.
+Treat them as application ingestion credentials, not administrative secrets.
 
 ## Public API
 

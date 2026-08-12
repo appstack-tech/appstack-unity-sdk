@@ -28,6 +28,9 @@ namespace Appstack
     /// </example>
     public static class AppstackSDK
     {
+        private static readonly object ConfigurationGate = new object();
+        private static ConfigurationRecord activeConfiguration;
+
         /// <summary>
         /// Configure the SDK with your API key and optional parameters.
         /// Must be called before any other SDK methods.
@@ -41,22 +44,62 @@ namespace Appstack
             int logLevel = 1,
             string customerUserId = null)
         {
+            ConfigureInternal(apiKey, logLevel, customerUserId);
+        }
+
+        internal static bool ConfigureAutomatically(string apiKey, int logLevel)
+        {
+            return ConfigureInternal(apiKey, logLevel, null);
+        }
+
+        private static bool ConfigureInternal(
+            string apiKey,
+            int logLevel,
+            string customerUserId)
+        {
             if (string.IsNullOrWhiteSpace(apiKey))
                 throw new ArgumentException("API key must be a non-empty string", nameof(apiKey));
             if (logLevel < 0 || logLevel > 3)
                 throw new ArgumentOutOfRangeException(nameof(logLevel), "logLevel must be between 0 and 3");
 
-            try
+            var normalizedApiKey = apiKey.Trim();
+            var normalizedCustomerUserId = customerUserId?.Trim() ?? "";
+
+            lock (ConfigurationGate)
             {
-                AppstackSDKNative.Configure(
-                    apiKey.Trim(),
+                if (activeConfiguration != null)
+                {
+                    var matches = activeConfiguration.Matches(
+                        normalizedApiKey,
+                        logLevel,
+                        normalizedCustomerUserId);
+                    if (!matches)
+                    {
+                        Debug.LogWarning(
+                            "[AppstackSDK] Configure ignored because the SDK is already " +
+                            "configured with different settings.");
+                    }
+
+                    return matches;
+                }
+
+                try
+                {
+                    AppstackSDKNative.Configure(
+                        normalizedApiKey,
+                        logLevel,
+                        normalizedCustomerUserId);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[AppstackSDK] Configure failed: {e.Message}");
+                    throw;
+                }
+
+                activeConfiguration = new ConfigurationRecord(
+                    normalizedApiKey,
                     logLevel,
-                    customerUserId?.Trim() ?? "");
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[AppstackSDK] Configure failed: {e.Message}");
-                throw;
+                    normalizedCustomerUserId);
             }
 
             if (AppstackSDKNative.ReportsConfigurationStatus)
@@ -74,6 +117,8 @@ namespace Appstack
                     // Configuration itself succeeded; status reporting is best-effort.
                 }
             }
+
+            return true;
         }
 
         /// <summary>
@@ -234,6 +279,50 @@ namespace Appstack
         internal static string NativeEventName(EventType eventType, string eventName)
         {
             return eventType == EventType.CUSTOM ? eventName : null;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetConfigurationState()
+        {
+            lock (ConfigurationGate)
+            {
+                activeConfiguration = null;
+            }
+        }
+
+        internal static void ResetConfigurationStateForTesting()
+        {
+            ResetConfigurationState();
+        }
+
+        private sealed class ConfigurationRecord
+        {
+            private readonly string apiKey;
+            private readonly int logLevel;
+            private readonly string customerUserId;
+
+            public ConfigurationRecord(
+                string configuredApiKey,
+                int configuredLogLevel,
+                string configuredCustomerUserId)
+            {
+                apiKey = configuredApiKey;
+                logLevel = configuredLogLevel;
+                customerUserId = configuredCustomerUserId;
+            }
+
+            public bool Matches(
+                string candidateApiKey,
+                int candidateLogLevel,
+                string candidateCustomerUserId)
+            {
+                return string.Equals(apiKey, candidateApiKey, StringComparison.Ordinal) &&
+                       logLevel == candidateLogLevel &&
+                       string.Equals(
+                           customerUserId,
+                           candidateCustomerUserId,
+                           StringComparison.Ordinal);
+            }
         }
 
     }
