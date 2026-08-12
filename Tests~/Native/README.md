@@ -36,4 +36,10 @@ APPSTACK_IOS_DISTRIBUTION_REPO=/path/to/ios-appstack-sdk \
   Tests~/Native/iOS/run-tests.sh
 ```
 
+Passing a checkout is the form to prefer, because only that form pins the tag.
+The runner also accepts a path to an XCFramework or to a directory containing
+one, as a local escape hatch; an XCFramework carries no trustworthy marketing
+version, so those inputs cannot be checked against the pin and the runner says
+so instead of claiming a verified version.
+
 Xcode with an iOS Simulator SDK and Swift 5.9 or newer is required.

@@ -22,15 +22,25 @@ cp "$BRIDGE_SOURCE" "$PACKAGE_DIR/Sources/AppstackUnityBridge/AppstackUnityBridg
 
 swift test --package-path "$PACKAGE_DIR"
 
+# Must match the pin in Editor/AppstackIOSPostProcessBuild.cs.
+EXPECTED_SDK_VERSION="4.5.0"
+
 EXACT_SDK_DIR="$TEMP_DIR/exact-sdk"
 mkdir -p "$EXACT_SDK_DIR"
 if [[ -d "$SDK_INPUT/.git" || -f "$SDK_INPUT/.git" ]]; then
-    git -C "$SDK_INPUT" archive 4.5.0 AppstackSDK.xcframework | tar -x -C "$EXACT_SDK_DIR"
+    git -C "$SDK_INPUT" archive "$EXPECTED_SDK_VERSION" AppstackSDK.xcframework \
+        | tar -x -C "$EXACT_SDK_DIR"
     XCFRAMEWORK="$EXACT_SDK_DIR/AppstackSDK.xcframework"
+    # Only this branch pins a tag, so only this branch can claim a version. An
+    # XCFramework carries no trustworthy marketing version (CFBundleShortVersionString
+    # is 1.0), so a caller-supplied binary cannot be checked against the pin.
+    VERIFIED_AGAINST="AppstackSDK $EXPECTED_SDK_VERSION"
 elif [[ "$SDK_INPUT" == *.xcframework ]]; then
     XCFRAMEWORK="$SDK_INPUT"
+    VERIFIED_AGAINST="the supplied XCFramework at $SDK_INPUT (version not verified)"
 else
     XCFRAMEWORK="$SDK_INPUT/AppstackSDK.xcframework"
+    VERIFIED_AGAINST="the XCFramework in $SDK_INPUT (version not verified)"
 fi
 
 SIMULATOR_FRAMEWORK="$XCFRAMEWORK/ios-arm64_x86_64-simulator/AppstackSDK.framework"
@@ -67,4 +77,4 @@ for symbol in "${EXPECTED_SYMBOLS[@]}"; do
     fi
 done
 
-echo "Verified iOS bridge against AppstackSDK 4.5.0 and all expected C symbols."
+echo "Verified iOS bridge against $VERIFIED_AGAINST and all expected C symbols."
