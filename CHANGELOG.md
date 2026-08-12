@@ -11,10 +11,8 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Initial Unity Package Manager distribution as `com.appstack.unity-sdk` for
   Unity 6 (`6000.0`) or newer.
-- Support for iOS 15.0+ through Appstack iOS SDK `4.4.0` and Android API level
-  21+ through Appstack Android SDK `1.7.0-SNAPSHOT` (a release candidate, pinned
-  for the native customer-user-id setter; move to the stable release before
-  shipping).
+- Support for iOS 15.0+ through Appstack iOS SDK `4.5.0` and Android API level
+  21+ through Appstack Android SDK `1.7.0`.
 - SDK configuration with an API key, log level, and optional customer user ID.
 - Standard and custom event tracking with optional event parameters.
 - Apple Ads attribution on iOS.
@@ -26,3 +24,9 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 - Automatic Android native dependency resolution through EDM4U.
 - Automatic Android R8/ProGuard configuration with no custom keep-rules step.
 - Basic Integration sample for manual SDK configuration and event tracking.
+
+### Notes
+
+- `EventType.INSTALL` is emitted automatically by the native SDKs on first
+  launch. Both pinned native versions discard a manually sent `INSTALL`, so
+  `SendEvent(EventType.INSTALL)` is a no-op.

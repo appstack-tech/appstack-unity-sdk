@@ -9,9 +9,8 @@ package artifact.
 The Android fixture has two modules:
 
 - `real-artifact` compiles the production Java bridge against
-  `tech.appstack.android-sdk:appstack-android-sdk:1.7.0-SNAPSHOT`, which must
-  match `Editor/AppstackDependencies.xml`. Release candidates resolve from the
-  Central Portal snapshot repository declared in `settings.gradle.kts`.
+  `tech.appstack.android-sdk:appstack-android-sdk:1.7.0`, which must match
+  `Editor/AppstackDependencies.xml`.
 - `contract-tests` compiles the same bridge against recording stubs and tests
   configuration, proxy metadata, log/event mapping, JSON conversion, getters,
   and immediate, suspended, and failed coroutine completion.
@@ -28,7 +27,7 @@ The Android 35 SDK, JDK 17, Google Maven, and Maven Central must be available.
 
 The iOS runner copies the production Swift bridge into a temporary Swift package.
 It first runs deterministic XCTest cases against a recording `AppstackSDK` module,
-then extracts the exact `4.4.0` XCFramework from an `ios-appstack-sdk` checkout,
+then extracts the exact `4.5.0` XCFramework from an `ios-appstack-sdk` checkout,
 compiles the production bridge for an iOS 15 simulator target, and checks every
 expected C ABI symbol with `nm`.
 
@@ -36,5 +35,11 @@ expected C ABI symbol with `nm`.
 APPSTACK_IOS_DISTRIBUTION_REPO=/path/to/ios-appstack-sdk \
   Tests~/Native/iOS/run-tests.sh
 ```
+
+Passing a checkout is the form to prefer, because only that form pins the tag.
+The runner also accepts a path to an XCFramework or to a directory containing
+one, as a local escape hatch; an XCFramework carries no trustworthy marketing
+version, so those inputs cannot be checked against the pin and the runner says
+so instead of claiming a verified version.
 
 Xcode with an iOS Simulator SDK and Swift 5.9 or newer is required.

@@ -124,7 +124,7 @@ return safe defaults. For example, `GetAppstackId()` returns `null` and
 
 | EventType         | Description                    |
 |-------------------|--------------------------------|
-| INSTALL           | App install (SDK may track)    |
+| INSTALL           | Automatic only; manual sends ignored |
 | LOGIN             | User login                     |
 | SIGN_UP / REGISTER| Registration                   |
 | PURCHASE          | Purchase (use revenue/currency)|
