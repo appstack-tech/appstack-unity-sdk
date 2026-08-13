@@ -28,6 +28,12 @@ disabled.
 No settings asset means manual mode; merely installing the package does not
 initialize the SDK.
 
+The password fields mask API keys visually only. Values remain plaintext in the
+settings asset and version control. The complete Resources asset is included in
+players, so development and other-platform keys may also be present in a
+production build. Use application ingestion credentials rather than
+administrative secrets.
+
 ### Manual initialization
 
 Call `Configure` once at startup (e.g. in a bootstrap scene or main menu) when

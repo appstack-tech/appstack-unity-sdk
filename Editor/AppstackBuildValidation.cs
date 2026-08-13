@@ -11,10 +11,26 @@ namespace Appstack.Editor
         public void OnPreprocessBuild(BuildReport report)
         {
             var settings = AppstackSettingsAsset.Load();
+            var platform = ToTargetPlatform(report.summary.platform);
+            var developmentBuild =
+                (report.summary.options & BuildOptions.Development) != 0;
+            if (settings != null &&
+                settings.AutoInitialize &&
+                platform != AppstackTargetPlatform.Unsupported &&
+                settings.Resolve(platform, developmentBuild).PlatformEnabled)
+            {
+                var assetError = AppstackSettingsAsset.GetRuntimeLocationError(settings);
+                if (assetError != null)
+                {
+                    throw new BuildFailedException(
+                        "Appstack auto-initialization: " + assetError);
+                }
+            }
+
             Validate(
                 settings,
-                ToTargetPlatform(report.summary.platform),
-                (report.summary.options & BuildOptions.Development) != 0);
+                platform,
+                developmentBuild);
         }
 
         internal static void Validate(

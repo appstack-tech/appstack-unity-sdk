@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -64,7 +66,16 @@ namespace Appstack.Editor
                 "androidDevelopmentApiKey",
                 "androidProductionApiKey");
 
-            serializedSettings.ApplyModifiedProperties();
+            EditorGUILayout.HelpBox(
+                "API keys are masked only in this UI. They remain plaintext in the " +
+                "settings asset and version control, and every configured key—including " +
+                "development and other-platform keys—may be included in player builds.",
+                MessageType.Warning);
+
+            if (serializedSettings.ApplyModifiedProperties())
+            {
+                AssetDatabase.SaveAssetIfDirty(serializedSettings.targetObject);
+            }
             DrawResolutionStatus();
         }
 
@@ -112,6 +123,14 @@ namespace Appstack.Editor
 
         private void DrawResolutionStatus()
         {
+            var settings = (AppstackAutoInitializationSettings)serializedSettings.targetObject;
+            var assetError = AppstackSettingsAsset.GetRuntimeLocationError(settings);
+            if (assetError != null)
+            {
+                EditorGUILayout.HelpBox(assetError, MessageType.Error);
+                return;
+            }
+
             var target = AppstackBuildValidation.ToTargetPlatform(
                 EditorUserBuildSettings.activeBuildTarget);
             if (target == AppstackTargetPlatform.Unsupported)
@@ -123,7 +142,6 @@ namespace Appstack.Editor
                 return;
             }
 
-            var settings = (AppstackAutoInitializationSettings)serializedSettings.targetObject;
             var resolved = settings.Resolve(target, EditorUserBuildSettings.development);
             if (!settings.AutoInitialize)
             {
@@ -160,8 +178,16 @@ namespace Appstack.Editor
     {
         internal static AppstackAutoInitializationSettings Load()
         {
-            return AssetDatabase.LoadAssetAtPath<AppstackAutoInitializationSettings>(
+            var canonical = AssetDatabase.LoadAssetAtPath<AppstackAutoInitializationSettings>(
                 AppstackAutoInitializationSettings.AssetPath);
+            if (canonical != null)
+            {
+                return canonical;
+            }
+
+            return FindAll()
+                .OrderBy(AssetDatabase.GetAssetPath, StringComparer.Ordinal)
+                .FirstOrDefault();
         }
 
         internal static AppstackAutoInitializationSettings Create()
@@ -178,6 +204,62 @@ namespace Appstack.Editor
             AssetDatabase.CreateAsset(settings, AppstackAutoInitializationSettings.AssetPath);
             AssetDatabase.SaveAssets();
             Selection.activeObject = settings;
+            return settings;
+        }
+
+        internal static string GetRuntimeLocationError(
+            AppstackAutoInitializationSettings settings)
+        {
+            if (settings == null)
+            {
+                return null;
+            }
+
+            var allSettings = FindAll();
+            if (allSettings.Count > 1)
+            {
+                return "Multiple Appstack settings assets exist. Keep exactly one asset " +
+                       "named AppstackSettings.asset directly inside a Resources folder.";
+            }
+
+            var path = AssetDatabase.GetAssetPath(settings);
+            if (!IsRuntimeLoadableAssetPath(path))
+            {
+                return $"The Appstack settings asset at '{path}' cannot be loaded at " +
+                       "runtime. Move it directly into a Resources folder and keep the " +
+                       "name AppstackSettings.asset.";
+            }
+
+            return null;
+        }
+
+        internal static bool IsRuntimeLoadableAssetPath(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                return false;
+            }
+
+            var normalized = path.Replace('\\', '/');
+            return normalized.EndsWith(
+                "/Resources/" + AppstackAutoInitializationSettings.ResourceName + ".asset",
+                StringComparison.Ordinal);
+        }
+
+        private static List<AppstackAutoInitializationSettings> FindAll()
+        {
+            var settings = new List<AppstackAutoInitializationSettings>();
+            foreach (var guid in AssetDatabase.FindAssets(
+                         $"t:{nameof(AppstackAutoInitializationSettings)}"))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var asset = AssetDatabase.LoadAssetAtPath<AppstackAutoInitializationSettings>(path);
+                if (asset != null)
+                {
+                    settings.Add(asset);
+                }
+            }
+
             return settings;
         }
 

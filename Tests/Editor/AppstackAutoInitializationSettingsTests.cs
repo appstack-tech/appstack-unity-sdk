@@ -170,6 +170,22 @@ namespace Appstack.Tests
                 true));
         }
 
+        [TestCase("Assets/Appstack/Resources/AppstackSettings.asset", true)]
+        [TestCase("Assets/Configuration/Resources/AppstackSettings.asset", true)]
+        [TestCase(@"Assets\Appstack\Resources\AppstackSettings.asset", true)]
+        [TestCase("Assets/Appstack/AppstackSettings.asset", false)]
+        [TestCase("Assets/Resources/Appstack/AppstackSettings.asset", false)]
+        [TestCase("Assets/Appstack/Resources/RenamedSettings.asset", false)]
+        [TestCase("", false)]
+        public void RuntimeSettingsPathMustMatchResourcesLookup(
+            string path,
+            bool expected)
+        {
+            Assert.That(
+                AppstackSettingsAsset.IsRuntimeLoadableAssetPath(path),
+                Is.EqualTo(expected));
+        }
+
         private void SetAllKeys()
         {
             SetString("iosDevelopmentApiKey", "ios-dev");

@@ -121,8 +121,11 @@ same configuration is a silent no-op; a conflicting repeat is ignored with a
 warning that does not expose either API key. Failed configuration attempts may
 be retried.
 
-API keys stored in Unity settings are serialized into the project and player.
-Treat them as application ingestion credentials, not administrative secrets.
+The password fields mask API keys visually only. Keys remain plaintext in the
+settings asset and version control. Because Unity includes the entire Resources
+asset, every configured key—including development keys and keys for the other
+mobile platform—may be present in production player builds. Treat them as
+application ingestion credentials, not administrative secrets.
 
 ## Public API
 
