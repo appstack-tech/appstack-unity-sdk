@@ -6,10 +6,8 @@ public sealed class AppstackIntegrationProbe : MonoBehaviour
     private void Start()
     {
 #if !UNITY_EDITOR
-        Appstack.AppstackSDK.Configure(
-            "player-validation-build-only-key",
-            logLevel: 0,
-            customerUserId: "player-validation-user");
+        // The generated fixture settings initialize Appstack before this scene.
+        Appstack.AppstackSDK.SetCustomerUserId("player-validation-user");
 
         Appstack.AppstackSDK.SendEvent(
             Appstack.EventType.CUSTOM,
@@ -30,7 +28,6 @@ public sealed class AppstackIntegrationProbe : MonoBehaviour
 
         _ = Appstack.AppstackSDK.GetAppstackId();
         _ = Appstack.AppstackSDK.IsSdkDisabled();
-        Appstack.AppstackSDK.EnableAppleAdsAttribution();
         Appstack.AppstackSDK.GetAttributionParams(
             _ => { },
             _ => { });

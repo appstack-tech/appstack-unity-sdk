@@ -18,6 +18,7 @@ namespace Appstack.Tests
         [SetUp]
         public void SetUp()
         {
+            AppstackSDK.ResetConfigurationStateForTesting();
             bridge = new RecordingNativeBridge();
             bridgeOverride = AppstackSDKNative.OverrideBridgeForTesting(bridge);
             previousLogHandler = Debug.unityLogger.logHandler;
@@ -30,6 +31,7 @@ namespace Appstack.Tests
         {
             Debug.unityLogger.logHandler = previousLogHandler;
             bridgeOverride.Dispose();
+            AppstackSDK.ResetConfigurationStateForTesting();
         }
 
         [TestCase(null)]
@@ -114,6 +116,53 @@ namespace Appstack.Tests
 
             Assert.DoesNotThrow(() => AppstackSDK.Configure("api-key"));
             Assert.That(logHandler.Messages, Has.None.Contains("status failed"));
+        }
+
+        [Test]
+        public void ConfigureEquivalentRepeatIsSilentNoOp()
+        {
+            AppstackSDK.Configure("  api-key  ", 1, " customer ");
+            var messageCount = logHandler.Messages.Count;
+
+            AppstackSDK.Configure("api-key", 1, "customer");
+
+            Assert.That(bridge.ConfigureCalls, Is.EqualTo(1));
+            Assert.That(logHandler.Messages.Count, Is.EqualTo(messageCount));
+        }
+
+        [Test]
+        public void ConfigureConflictingRepeatWarnsWithoutKeys()
+        {
+            AppstackSDK.Configure("first-secret", 1);
+
+            AppstackSDK.Configure("second-secret", 1);
+
+            Assert.That(bridge.ConfigureCalls, Is.EqualTo(1));
+            Assert.That(logHandler.Messages, Has.Some.Contains("already configured"));
+            Assert.That(logHandler.Messages, Has.None.Contains("first-secret"));
+            Assert.That(logHandler.Messages, Has.None.Contains("second-secret"));
+        }
+
+        [Test]
+        public void ConfigureFailureCanBeRetried()
+        {
+            bridge.ConfigureException = new InvalidOperationException("temporary failure");
+            Assert.Throws<InvalidOperationException>(
+                () => AppstackSDK.Configure("api-key"));
+
+            bridge.ConfigureException = null;
+            Assert.DoesNotThrow(() => AppstackSDK.Configure("api-key"));
+
+            Assert.That(bridge.ConfigureCalls, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void AutomaticConfigurationReportsWhetherItMatchesTheWinner()
+        {
+            Assert.That(AppstackSDK.ConfigureAutomatically("auto-key", 1), Is.True);
+            Assert.That(AppstackSDK.ConfigureAutomatically(" auto-key ", 1), Is.True);
+            Assert.That(AppstackSDK.ConfigureAutomatically("other-key", 1), Is.False);
+            Assert.That(bridge.ConfigureCalls, Is.EqualTo(1));
         }
 
         [Test]

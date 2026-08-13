@@ -9,6 +9,7 @@ namespace Appstack.Tests
         [Test]
         public void PublicApiIsSilentAndReturnsSafeDefaultsInEditor()
         {
+            AppstackSDK.ResetConfigurationStateForTesting();
             var previousHandler = Debug.unityLogger.logHandler;
             var recordingHandler = new RecordingLogHandler();
             Debug.unityLogger.logHandler = recordingHandler;
@@ -29,6 +30,7 @@ namespace Appstack.Tests
             finally
             {
                 Debug.unityLogger.logHandler = previousHandler;
+                AppstackSDK.ResetConfigurationStateForTesting();
             }
 
             Assert.That(recordingHandler.LogCount, Is.Zero);

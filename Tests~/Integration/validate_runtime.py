@@ -42,8 +42,10 @@ def main() -> None:
         for line in Path(args.requests_file).read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
-    require(any(item["path"].split("?", 1)[0].endswith("/config") for item in requests),
-            "native SDK did not fetch remote configuration")
+    config_requests = [item for item in requests
+                       if item["path"].split("?", 1)[0].endswith("/config")]
+    require(len(config_requests) == 1,
+            f"native SDK configuration count was {len(config_requests)}, expected exactly one")
     require(any("/attribution/match/" in item["path"] for item in requests),
             "native SDK did not perform attribution matching")
 

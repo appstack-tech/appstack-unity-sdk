@@ -48,6 +48,11 @@ The import check proves that a clean Unity 6 project can resolve the package,
 compile its assemblies, and apply the committed plugin importer metadata. The
 Java bridge must be Android-only and the Swift bridge iOS-only.
 
+The fixture creates the same project-wide settings asset as the Project
+Settings UI. Both development and release players therefore compile and start
+through the package's scene-independent auto-initializer rather than a probe
+calling `Configure`.
+
 Android builds both a development and a release IL2CPP APK. Release
 minification is enabled. The fixture verifies that the generated
 `proguard-unity.txt` has one Appstack block, then inspects the release DEX to
@@ -111,7 +116,7 @@ The machine-readable runtime probe and request validator prove that:
 - the player is IL2CPP and loads the pinned native SDK through the production
   Unity bridge;
 - native configuration fetches remote configuration and produces an Appstack
-  ID without reporting the SDK disabled;
+  ID without reporting the SDK disabled, with exactly one configuration fetch;
 - native install attribution performs a local match request and preserves
   UTF-8 query parameters through the callback, using each native SDK's expected
   `match_url` form;

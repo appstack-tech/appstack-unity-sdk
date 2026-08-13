@@ -5,7 +5,40 @@ and attribution data.
 
 ## SDK initialization
 
-Call `Configure` once at startup (e.g. in a bootstrap scene or main menu).
+### Automatic initialization
+
+Open **Edit → Project Settings → Appstack** and create the settings asset. The
+default configuration enables auto-initialization for iOS and Android and runs
+before the first scene:
+
+- Automatic environment selection uses development keys for Unity Development
+  Builds and production keys for other builds.
+- Development and Production modes pin every build to that environment.
+- **Allow Production Fallback** permits a development build with no development
+  key to use its production key. It is off by default, and production never
+  falls back to development.
+- Disable a platform if the project intentionally does not ship Appstack on it.
+- Apple Ads Attribution can be enabled as part of iOS auto-initialization.
+
+Only the current target is validated. For example, an iOS build does not
+require Android keys. An enabled target with no resolvable key fails its build
+with a configuration error rather than shipping with Appstack unexpectedly
+disabled.
+
+No settings asset means manual mode; merely installing the package does not
+initialize the SDK.
+
+The password fields mask API keys visually only. Values remain plaintext in the
+settings asset and version control. The complete Resources asset is included in
+players, so development and other-platform keys may also be present in a
+production build. Use application ingestion credentials rather than
+administrative secrets.
+
+### Manual initialization
+
+Call `Configure` once at startup (e.g. in a bootstrap scene or main menu) when
+auto-initialization is not appropriate. Manual mode is recommended when user
+consent or another application bootstrap step must happen first.
 
 ```csharp
 using System.Collections.Generic;
@@ -37,6 +70,10 @@ AppstackSDK.Configure(
     customerUserId: "user-123"
 );
 ```
+
+The first successful automatic or manual configuration wins. An identical
+repeat is ignored silently; a conflicting repeat logs a warning and is ignored.
+A failed attempt does not lock the wrapper and can be retried.
 
 ## Customer user ID
 

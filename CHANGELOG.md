@@ -5,7 +5,18 @@ All notable changes to the Appstack Unity SDK are documented in this file.
 The format is based on [Keep a
 Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [1.2.0] - 2026-08-13
+
+### Added
+
+- Optional scene-independent auto-initialization configured through **Edit →
+  Project Settings → Appstack**, with separate development and production keys
+  for iOS and Android, per-platform enablement, automatic or pinned environment
+  selection, explicit production-key fallback for development builds, and
+  target-specific pre-build validation.
+- Idempotent Unity-side configuration: the first successful automatic or
+  manual configuration wins, identical repeats are silent, conflicting repeats
+  warn without exposing credentials, and failed attempts remain retryable.
 
 ## [1.1.0] - 2026-08-12
 
