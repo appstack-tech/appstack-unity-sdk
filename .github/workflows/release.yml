@@ -142,6 +142,10 @@ jobs:
 
             See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CHANGELOG.md) for details.
 
+            ### Package authenticity
+
+            The OpenUPM artifact is signed by Appstack through Unity's package-signing service. Unity 6.3 and newer can verify its publisher and integrity during installation.
+
             ### Install through Unity Package Manager
 
             1. Download and extract `appstack-unity-sdk-${{ steps.version.outputs.version }}.zip`.
