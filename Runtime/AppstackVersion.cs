@@ -5,7 +5,7 @@ namespace Appstack
 {
     internal static class AppstackVersion
     {
-        internal const string PackageVersion = "1.2.0";
+        internal const string PackageVersion = "1.2.1";
         internal const string WrapperVersion = "unity-" + PackageVersion;
     }
 }

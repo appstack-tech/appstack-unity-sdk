@@ -5,6 +5,14 @@ All notable changes to the Appstack Unity SDK are documented in this file.
 The format is based on [Keep a
 Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.2.1] - 2026-08-17
+
+### Changed
+
+- OpenUPM releases now use a Unity-signed `.tgz` created with a pinned,
+  checksum-verified Unity UPM CLI. Unity 6.3 and newer can verify the package's
+  publisher and integrity instead of showing the missing-signature warning.
+
 ## [1.2.0] - 2026-08-13
 
 ### Added
