@@ -75,11 +75,23 @@ jobs:
           echo "package_name=${PACKAGE_NAME}.zip" >> "$GITHUB_ENV"
           echo "package_root=${PACKAGE_ROOT}" >> "$GITHUB_ENV"
 
-      - name: Install Unity UPM CLI
+      - name: Install pinned Unity UPM CLI
+        env:
+          UPM_CLI_VERSION: v9.32.0
+          UPM_CLI_SHA256: 1de355a1bd5daf134a4dc7b6f97194e0db89cfedd0f98b5d8204603f7d009c21
         run: |
-          curl -fsSL https://cdn.packages.unity.com/upm-cli/install.sh -o install-upm-cli.sh
-          bash install-upm-cli.sh
-          echo "$HOME/.upm/bin" >> "$GITHUB_PATH"
+          archive="$RUNNER_TEMP/upm-linux-x64.zip"
+          install_dir="$RUNNER_TEMP/upm-cli"
+          curl -fsSL \
+            "https://cdn.packages.unity.com/upm-cli/releases/${UPM_CLI_VERSION}/upm-linux-x64.zip" \
+            -o "$archive"
+          echo "${UPM_CLI_SHA256}  ${archive}" | sha256sum --check --strict -
+
+          mkdir -p "$install_dir"
+          unzip -q "$archive" -d "$install_dir"
+          chmod +x "$install_dir/UnityPackageManager"
+          ln -s UnityPackageManager "$install_dir/upm"
+          echo "$install_dir" >> "$GITHUB_PATH"
 
       - name: Pack and sign UPM package
         env:
