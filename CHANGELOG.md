@@ -5,6 +5,26 @@ All notable changes to the Appstack Unity SDK are documented in this file.
 The format is based on [Keep a
 Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.3.0] - 2026-09-03
+
+### Changed
+
+- Pinned native SDKs are now Appstack iOS SDK `4.6.0` and Appstack Android SDK
+  `1.8.0`. Platform floors are unchanged: iOS 15.0+ and Android API level 21+.
+- Custom event parameters are encrypted on the device before being sent.
+  Parameter names that must stay readable, such as `currency` and `revenue`,
+  are excluded through a server-controlled list, so revenue reporting is
+  unchanged. On-device encryption requires iOS 17 or newer; iOS 15 and 16
+  encrypt server-side as before.
+- The pinned iOS SDK ships an Apple privacy manifest declaring its
+  required-reason API usage.
+
+### Fixed
+
+- On iOS, an event whose parameters hold `null` is no longer dropped, and a
+  parameter value JSON cannot represent no longer crashes the app. Those keys
+  are dropped individually and the event still sends.
+
 ## [1.2.1] - 2026-08-17
 
 ### Changed
