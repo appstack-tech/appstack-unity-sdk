@@ -23,17 +23,17 @@ cp "$BRIDGE_SOURCE" "$PACKAGE_DIR/Sources/AppstackUnityBridge/AppstackUnityBridg
 swift test --package-path "$PACKAGE_DIR"
 
 # Must match the pin in Editor/AppstackIOSPostProcessBuild.cs.
-EXPECTED_SDK_VERSION="4.5.0"
+EXPECTED_SDK_VERSION="4.6.0"
 
 EXACT_SDK_DIR="$TEMP_DIR/exact-sdk"
 mkdir -p "$EXACT_SDK_DIR"
 if [[ -d "$SDK_INPUT/.git" || -f "$SDK_INPUT/.git" ]]; then
     # Resolve the binary the way SPM does, from the binaryTarget the tag declares.
     # The distribution repo also still carries a committed AppstackSDK.xcframework
-    # directory, but it is vestigial: it is byte-identical across 4.4.0 through
-    # 4.5.0 and does not track the tag. Reading it made this fixture silently
-    # compile against stale bits while reporting the pinned version, so resolve
-    # the declared URL and enforce the declared checksum instead.
+    # directory, but it is vestigial: it does not track the tag. Reading it made
+    # this fixture silently compile against stale bits while reporting the
+    # pinned version, so resolve the declared URL and enforce the declared
+    # checksum instead.
     PACKAGE_MANIFEST="$TEMP_DIR/distribution-Package.swift"
     git -C "$SDK_INPUT" show "${EXPECTED_SDK_VERSION}:Package.swift" > "$PACKAGE_MANIFEST"
 

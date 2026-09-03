@@ -9,7 +9,7 @@ package artifact.
 The Android fixture has two modules:
 
 - `real-artifact` compiles the production Java bridge against
-  `tech.appstack.android-sdk:appstack-android-sdk:1.7.0`, which must match
+  `tech.appstack.android-sdk:appstack-android-sdk:1.8.0`, which must match
   `Editor/AppstackDependencies.xml`.
 - `contract-tests` compiles the same bridge against recording stubs and tests
   configuration, proxy metadata, log/event mapping, JSON conversion, getters,
@@ -27,7 +27,7 @@ The Android 35 SDK, JDK 17, Google Maven, and Maven Central must be available.
 
 The iOS runner copies the production Swift bridge into a temporary Swift package.
 It first runs deterministic XCTest cases against a recording `AppstackSDK` module,
-then resolves the exact `4.5.0` XCFramework, compiles the production bridge for an
+then resolves the exact `4.6.0` XCFramework, compiles the production bridge for an
 iOS 15 simulator target, and checks every expected C ABI symbol with `nm`.
 
 ```sh
@@ -42,9 +42,9 @@ form is the one to prefer, and it needs network access.
 
 It deliberately does not read the `AppstackSDK.xcframework` directory committed
 in the distribution repository. That directory is vestigial after the move to
-`binaryTarget(url:checksum:)` — it is byte-identical across `4.4.0` through
-`4.5.0` and does not track the tag — so reading it compiles the bridge against
-stale bits while appearing to test the pinned version.
+`binaryTarget(url:checksum:)` — it does not track the tag — so reading it
+compiles the bridge against stale bits while appearing to test the pinned
+version.
 
 The runner also accepts a path to an XCFramework or to a directory containing
 one, as a local escape hatch. An XCFramework carries no trustworthy marketing
