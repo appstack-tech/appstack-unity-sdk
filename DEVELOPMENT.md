@@ -91,9 +91,9 @@ injection, and environment variables are intentionally deferred.
 
 Dependency versions are declared in the platform-specific editor integration:
 
-- Android: `tech.appstack.android-sdk:appstack-android-sdk:1.7.0` in
+- Android: `tech.appstack.android-sdk:appstack-android-sdk:1.8.0` in
   `Editor/AppstackDependencies.xml`
-- iOS: `AppstackSDK` Swift package product at `4.5.0` in
+- iOS: `AppstackSDK` Swift package product at `4.6.0` in
   `Editor/AppstackIOSPostProcessBuild.cs`
 
 When either native dependency changes, update the corresponding editor
@@ -135,7 +135,7 @@ the application target so Xcode embeds and signs the dynamic framework. It also
 sets the Swift language version and enables Swift standard-library embedding on
 the application target.
 
-The `4.5.0` Swift package uses its binary XCFramework. Its private Swift
+The `4.6.0` Swift package uses its binary XCFramework. Its private Swift
 interfaces expose the `AppstackInternal` SPI used by this bridge. The native
 contract fixture compiles the production bridge against the exact tagged binary
 and must pass before adopting any future binary SDK tag.
@@ -212,7 +212,8 @@ Remove any ad-hoc compilation harnesses created under `/tmp` after local checks.
 - Move the Android Java bridge into a separately published wrapper AAR with
   consumer keep rules.
 - Revisit how the Android application context is acquired in the native SDK.
-- Add and verify the iOS native SDK privacy manifest.
+- Verify the iOS native SDK privacy manifest in a Unity export. The native SDK
+  declares its required-reason API usage as of `4.5.1`.
 - Rebuild the iOS binary distribution with its current SPI declarations before
   adopting a binary Swift package target.
 - Add wrapper-contract tests to the native repositories and align sibling

@@ -15,16 +15,28 @@ The GitHub Actions workflow packages the root-level UPM contents. It:
 - Excludes repository-only files and generated output. The workflow allowlist
   controls the GitHub ZIP, while `.npmignore` applies the same boundary to the
   tarball built by OpenUPM.
+- Fails when the assembled package contains a `-SNAPSHOT` coordinate anywhere.
+  A snapshot pin is mutable and expires, so a release must never ship one.
+- Signs the package with `upm pack`, using a pinned, checksum-verified Unity UPM
+  CLI, and verifies that the signed archive carries an attestation and the
+  expected package name and version.
+- Attaches both artifacts to the GitHub Release: the ZIP for manual installation
+  and the signed `.tgz`.
 - Describes manual installation through Unity Package Manager.
 - Triggers an OpenUPM scan and waits until the tagged version is installable or
   OpenUPM reports a build failure.
+
+Signing requires the `UPM_SERVICE_ACCOUNT_KEY_ID`, `UPM_SERVICE_ACCOUNT_KEY_SECRET`,
+and `UPM_ORG_ID` repository secrets. The job fails before packing when any of
+them is missing.
 
 ## Before tagging
 
 1. Confirm the release uses the intended stable Android and iOS native SDK
    versions.
 2. Update both native dependency pins, their validation fixtures, and the
-   public platform documentation together.
+   public platform documentation together. Both pins must name a released
+   version; the workflow rejects a `-SNAPSHOT` coordinate.
 3. Run `node scripts~/set-version.mjs <version>`. This updates the root
    `package.json` and regenerates `Runtime/AppstackVersion.cs` together.
 4. Run `node scripts~/set-version.mjs --check <version>`. The editor tests and
@@ -57,11 +69,15 @@ repository checkout.
    installable.
 5. Confirm the release archive passes a clean-project import check and the
    GitHub release notes link to the versioned changelog.
+6. Confirm OpenUPM reports the published version as signed. The publish step
+   exposes a `signed` output but does not assert it, so an unsigned publish
+   still leaves the job green.
 
 The package is already registered with OpenUPM in Git tracking mode. OpenUPM
 builds each version by running `npm pack` on the matching Git tag; it does not
-consume the ZIP attached to the GitHub Release. The workflow uses OpenUPM's
-OIDC-based action, so no OpenUPM token or repository secret is required.
+consume the artifacts attached to the GitHub Release. The workflow uses
+OpenUPM's OIDC-based action, so no OpenUPM token or repository secret is
+required.
 
 `.openupm/package-metadata.yml` is a reference copy. OpenUPM reads the
 authoritative metadata from the `openupm/openupm` repository. Update listing
