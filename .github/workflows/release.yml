@@ -133,25 +133,25 @@ jobs:
 
           echo "signed_package=${signed_package}" >> "$GITHUB_ENV"
 
+      # The release notes lead with the tagged CHANGELOG.md section, so the
+      # release page stands on its own instead of pointing readers elsewhere.
+      # A missing section fails the release rather than publishing install
+      # steps with no notes.
+      - name: Compose release notes
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          notes="$RUNNER_TEMP/release-notes.md"
+          node scripts~/release-notes.mjs "$VERSION" --repo "$REPOSITORY" > "$notes"
+          cat "$notes"
+          echo "release_notes=${notes}" >> "$GITHUB_ENV"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ steps.version.outputs.version }}
-          body: |
-            ## Appstack Unity SDK ${{ steps.version.outputs.version }}
-
-            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CHANGELOG.md) for details.
-
-            ### Package authenticity
-
-            The OpenUPM artifact is signed by Appstack through Unity's package-signing service. Unity 6.3 and newer can verify its publisher and integrity during installation.
-
-            ### Install through Unity Package Manager
-
-            1. Download and extract `appstack-unity-sdk-${{ steps.version.outputs.version }}.zip`.
-            2. In Unity, open **Window → Package Manager**.
-            3. Select **+ → Add package from disk** and choose the extracted root `package.json`.
-            4. Complete the [iOS](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/Documentation~/iOS.md) and [Android](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/Documentation~/Android.md) setup.
+          body_path: ${{ env.release_notes }}
           files: |
             ${{ env.package_name }}
             ${{ env.signed_package }}
