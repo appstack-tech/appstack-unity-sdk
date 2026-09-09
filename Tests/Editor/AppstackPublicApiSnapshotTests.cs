@@ -10,6 +10,10 @@ namespace Appstack.Tests
     public sealed class AppstackPublicApiSnapshotTests
     {
         private const string ExpectedSnapshot =
+            "public class Appstack.AppstackLinkResult\n" +
+            "  string get_DeeplinkId()\n" +
+            "  Dictionary<string, string> get_QueryParams()\n" +
+            "  string get_Url()\n" +
             "public static class Appstack.AppstackSDK\n" +
             "  void Configure(string apiKey, int logLevel = 1, string customerUserId = null)\n" +
             "  void SetCustomerUserId(string customerUserId)\n" +
@@ -19,6 +23,7 @@ namespace Appstack.Tests
             "  void EnableAppleAdsAttribution()\n" +
             "  string GetAppstackId()\n" +
             "  bool IsSdkDisabled()\n" +
+            "  AppstackLinkResult HandleUniversalLink(string url, String[] allowedHosts = null)\n" +
             "  void GetAttributionParams(Action<Dictionary<string, object>> onSuccess, " +
             "Action<string> onError = null)\n" +
             "public enum Appstack.EventType\n" +

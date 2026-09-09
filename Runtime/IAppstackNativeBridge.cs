@@ -23,6 +23,8 @@ namespace Appstack
 
         bool IsSdkDisabled();
 
+        Dictionary<string, object> HandleUniversalLink(string url, string[] allowedHosts);
+
         void GetAttributionParams(
             Action<Dictionary<string, object>> onSuccess,
             Action<string> onError);

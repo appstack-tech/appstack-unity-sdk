@@ -153,6 +153,42 @@ Call after `Configure` on iOS builds only:
 
 Requires iOS 15.0+ and the iOS setup described in [Documentation~/iOS.md](Documentation~/iOS.md).
 
+## Universal Links and Android App Links
+
+Appstack supports standard links on a branded domain, shaped as
+`https://links.example.com/{deeplinkId}?key=value`. The shared `appstack.link`
+and `dev.appstack.link` hosts are intentionally ignored.
+
+Unity exposes a cold-start URL through `Application.absoluteURL` and later links
+through [`Application.deepLinkActivated`](https://docs.unity3d.com/ScriptReference/Application-deepLinkActivated.html).
+Forward both to the SDK:
+
+```csharp
+private void Start()
+{
+    if (!string.IsNullOrEmpty(Application.absoluteURL))
+        HandleLink(Application.absoluteURL);
+    Application.deepLinkActivated += HandleLink;
+}
+
+private void HandleLink(string url)
+{
+    var link = AppstackSDK.HandleUniversalLink(
+        url,
+        new[] { "links.example.com" });
+    if (link != null)
+    {
+        // Route using link.DeeplinkId and link.QueryParams.
+    }
+}
+```
+
+The parser is safe before `Configure` and performs no network request or
+tracking. Configure the iOS Associated Domains entitlement with
+`applinks:links.example.com` and add a verified Android HTTPS intent filter for
+the same host. The domain must serve the matching AASA and `assetlinks.json`
+files.
+
 ## Appstack ID and attribution parameters
 
 ```csharp

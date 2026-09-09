@@ -313,6 +313,32 @@ namespace Appstack.Tests
         }
 
         [Test]
+        public void UniversalLinkReturnsTypedResult()
+        {
+            bridge.LinkResult = new Dictionary<string, object>
+            {
+                { "deeplinkId", "abc" },
+                { "queryParams", new Dictionary<string, object> { { "screen", "offer" } } },
+                { "url", "https://links.example.com/abc?screen=offer" },
+            };
+
+            var link = AppstackSDK.HandleUniversalLink(
+                " https://links.example.com/abc?screen=offer ",
+                new[] { " links.example.com " });
+
+            Assert.That(link.DeeplinkId, Is.EqualTo("abc"));
+            Assert.That(link.QueryParams["screen"], Is.EqualTo("offer"));
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("   ")]
+        public void UniversalLinkRejectsMissingUrl(string url)
+        {
+            Assert.Throws<ArgumentException>(() => AppstackSDK.HandleUniversalLink(url));
+        }
+
+        [Test]
         public void AttributionRejectsNullSuccessCallback()
         {
             Assert.Throws<ArgumentNullException>(
@@ -414,6 +440,7 @@ namespace Appstack.Tests
             public bool SdkDisabled { get; set; }
             public int IsSdkDisabledCalls { get; private set; }
             public Exception IsSdkDisabledException { get; set; }
+            public Dictionary<string, object> LinkResult { get; set; }
             public int AttributionCalls { get; private set; }
             public Exception AttributionException { get; set; }
             public Action<Action<Dictionary<string, object>>, Action<string>>
@@ -460,6 +487,11 @@ namespace Appstack.Tests
                 IsSdkDisabledCalls++;
                 if (IsSdkDisabledException != null) throw IsSdkDisabledException;
                 return SdkDisabled;
+            }
+
+            public Dictionary<string, object> HandleUniversalLink(string url, string[] allowedHosts)
+            {
+                return LinkResult;
             }
 
             public void GetAttributionParams(

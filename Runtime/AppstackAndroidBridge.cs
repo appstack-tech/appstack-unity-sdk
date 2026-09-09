@@ -75,6 +75,18 @@ namespace Appstack
             return UnityBridge.Value.CallStatic<bool>("isSdkDisabled");
         }
 
+        public static Dictionary<string, object> HandleUniversalLink(
+            string url,
+            string[] allowedHosts)
+        {
+            var json = UnityBridge.Value.CallStatic<string>(
+                "handleUniversalLink",
+                url,
+                allowedHosts);
+            if (string.IsNullOrEmpty(json)) return null;
+            return AppstackJson.ParseObject(json);
+        }
+
         public static void GetAttributionParams(
             Action<Dictionary<string, object>> onSuccess,
             Action<string> onError)
