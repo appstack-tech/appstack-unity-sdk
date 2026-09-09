@@ -171,6 +171,11 @@ private void Start()
     Application.deepLinkActivated += HandleLink;
 }
 
+private void OnDestroy()
+{
+    Application.deepLinkActivated -= HandleLink;
+}
+
 private void HandleLink(string url)
 {
     var link = AppstackSDK.HandleUniversalLink(
