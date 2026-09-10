@@ -22,7 +22,10 @@ The GitHub Actions workflow packages the root-level UPM contents. It:
   expected package name and version.
 - Attaches both artifacts to the GitHub Release: the ZIP for manual installation
   and the signed `.tgz`.
-- Describes manual installation through Unity Package Manager.
+- Builds the release body with `node scripts~/release-notes.mjs <version>`: the
+  tagged `CHANGELOG.md` section first, then manual installation through Unity
+  Package Manager. The step fails when the changelog has no section for the tag,
+  so a release cannot publish install steps and no notes.
 - Triggers an OpenUPM scan and waits until the tagged version is installable or
   OpenUPM reports a build failure.
 
@@ -42,7 +45,9 @@ them is missing.
 4. Run `node scripts~/set-version.mjs --check <version>`. The editor tests and
    release workflow run equivalent validation; both native bridges receive the
    resulting `unity-<version>` value from C#.
-5. Move relevant entries from `Unreleased` to a versioned changelog section.
+5. Move relevant entries from `Unreleased` to a versioned changelog section. The
+   release workflow reads that section as the release body and fails without it.
+   Preview it with `node scripts~/release-notes.mjs <version>`.
 6. Confirm every package asset has a committed, unique `.meta` file.
 
 ## Validation
@@ -54,6 +59,11 @@ Complete the device-build matrix in [DEVELOPMENT.md](DEVELOPMENT.md), including:
 - iOS physical-device build or archive from a fresh Unity export.
 - Configure, events, ID/status calls, concurrent attribution callbacks, main
   thread delivery, and UTF-8 attribution values on both platforms.
+
+Run `node --test scripts~/release-notes.test.mjs`. It covers the changelog
+section extractor, including the heading matches that must not resolve: a tag
+whose version only prefixes a longer one, such as 1.2.1 against a 1.2.10
+section.
 
 Inspect the release archive before publishing. Adding it as a local package to a
 clean Unity project must produce the same package contents and behavior as a
@@ -68,7 +78,8 @@ repository checkout.
    Release, triggers OpenUPM, and waits for the registry version to become
    installable.
 5. Confirm the release archive passes a clean-project import check and the
-   GitHub release notes link to the versioned changelog.
+   GitHub release notes carry the version's changelog section above the install
+   instructions.
 6. Confirm OpenUPM reports the published version as signed. The publish step
    exposes a `signed` output but does not assert it, so an unsigned publish
    still leaves the job green.
