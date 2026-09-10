@@ -10,8 +10,11 @@ BUNDLE_ID="tech.appstack.unity.runtimevalidation"
 # real branded domain to exercise that domain's own link shape.
 LINK_URL="${APPSTACK_RUNTIME_LINK_URL:-https://links.example.com/abc123?utm_source=fixture}"
 LINK_HOST="$(python3 -c 'import sys, urllib.parse; print(urllib.parse.urlsplit(sys.argv[1]).hostname or "")' "$LINK_URL")"
-if [[ -z "$LINK_HOST" ]]; then
-  echo "APPSTACK_RUNTIME_LINK_URL must be an absolute URL with a host" >&2
+LINK_SCHEME="$(python3 -c 'import sys, urllib.parse; print(urllib.parse.urlsplit(sys.argv[1]).scheme.lower())' "$LINK_URL")"
+# The fixture intent filter declares https only, so any other scheme would build
+# a player the delivered intent can never match.
+if [[ -z "$LINK_HOST" || "$LINK_SCHEME" != "https" ]]; then
+  echo "APPSTACK_RUNTIME_LINK_URL must be an absolute HTTPS URL with a host" >&2
   exit 2
 fi
 

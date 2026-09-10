@@ -33,11 +33,18 @@ def validate_delivered_link(case: dict, source: str, url: str) -> None:
     """A link the operating system routed to the player, rather than one the test
     handed to the SDK. Its parse must match the URL that was actually delivered."""
     expected_id = urllib.parse.unquote(urllib.parse.urlsplit(url).path.lstrip("/"))
-    expected_params = sorted(
-        f"{name}={value}"
-        for name, value in urllib.parse.parse_qsl(
-            urllib.parse.urlsplit(url).query, keep_blank_values=True
+    # Mirror the native parsers rather than using parse_qsl: a repeated name keeps
+    # its final value, a missing value becomes empty, and "+" stays a plus sign.
+    expected_query = {}
+    for item in (urllib.parse.urlsplit(url).query or "").split("&"):
+        if not item:
+            continue
+        name, separator, value = item.partition("=")
+        expected_query[urllib.parse.unquote(name)] = (
+            urllib.parse.unquote(value) if separator else ""
         )
+    expected_params = sorted(
+        f"{name}={value}" for name, value in expected_query.items()
     )
 
     require(not case.get("error"), f"{source} link threw {case.get('error')}")
