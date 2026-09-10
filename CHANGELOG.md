@@ -5,15 +5,20 @@ All notable changes to the Appstack Unity SDK are documented in this file.
 The format is based on [Keep a
 Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [1.4.0] - 2026-09-10
 
 ### Added
 
-- Added `AppstackSDK.HandleUniversalLink(url, allowedHosts)` for parsing branded-domain Appstack standard links delivered through `Application.absoluteURL` and `Application.deepLinkActivated`. It is safe before `Configure` and returns `null` for unsupported links.
+- `AppstackSDK.HandleUniversalLink(url, allowedHosts)` parses branded-domain
+  Appstack standard links delivered through `Application.absoluteURL` and
+  `Application.deepLinkActivated`. It is safe before `Configure` and returns
+  `null` for unsupported links.
 
 ### Changed
 
-- Updated the native SDK dependencies that provide standard-link parsing: iOS `4.7.0` and Android `1.9.0`.
+- Pinned native SDKs are now Appstack iOS SDK `4.7.0` and Appstack Android SDK
+  `1.9.0`, which provide standard-link parsing. Platform floors are unchanged:
+  iOS 15.0+ and Android API level 21+.
 
 ## [1.3.0] - 2026-09-03
 
