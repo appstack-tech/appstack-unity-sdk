@@ -28,10 +28,16 @@ function fail(message) {
 // Reads one `## [1.3.0] - 2026-09-03` section out of the Keep a Changelog file.
 // A `###` subheading cannot end the section, so the Added/Changed/Fixed
 // subsections come through verbatim and need no re-leveling.
-function changelogSection(changelog, version) {
+//
+// The version has to match a whole heading token, not a prefix of one: a
+// bracketed version closes its bracket, and a bare one ends the word. Matching
+// loosely published 1.2.10's notes under the 1.2.1 tag, because the newest
+// section sits above the older one and won the match.
+export function changelogSection(changelog, version) {
   const escapedVersion = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const sectionPattern = new RegExp(
-    `^## \\[?${escapedVersion}\\]?[^\\n]*\\n([\\s\\S]*?)(?=^## |$(?![\\s\\S]))`,
+    `^## (?:\\[${escapedVersion}\\]|${escapedVersion}(?=\\s|$))[^\\n]*\\n` +
+      `([\\s\\S]*?)(?=^## |$(?![\\s\\S]))`,
     'm',
   );
 
@@ -59,41 +65,49 @@ The OpenUPM artifact is signed by Appstack through Unity's package-signing servi
 `;
 }
 
-const args = process.argv.slice(2);
-const repositoryIndex = args.indexOf('--repo');
-let repository = defaultRepository;
+// The extractor is exported for scripts~/release-notes.test.mjs, so the CLI
+// runs only when this file is the entry point.
+function main() {
+  const args = process.argv.slice(2);
+  const repositoryIndex = args.indexOf('--repo');
+  let repository = defaultRepository;
 
-if (repositoryIndex !== -1) {
-  repository = args[repositoryIndex + 1];
-  args.splice(repositoryIndex, 2);
+  if (repositoryIndex !== -1) {
+    repository = args[repositoryIndex + 1];
+    args.splice(repositoryIndex, 2);
 
-  if (repository === undefined || !repositoryPattern.test(repository)) {
-    fail('--repo must be an "owner/name" repository slug.');
+    if (repository === undefined || !repositoryPattern.test(repository)) {
+      fail('--repo must be an "owner/name" repository slug.');
+    }
   }
+
+  if (args.length !== 1) {
+    fail('usage: node scripts~/release-notes.mjs <version> [--repo owner/name]');
+  }
+
+  const version = args[0];
+  if (!semverPattern.test(version)) {
+    fail(`version must be a semantic version, received "${version}".`);
+  }
+
+  let changelog;
+  try {
+    changelog = fs.readFileSync(changelogPath, 'utf8');
+  } catch (error) {
+    fail(`unable to read CHANGELOG.md: ${error.message}`);
+  }
+
+  const section = changelogSection(changelog, version);
+  if (!section) {
+    fail(
+      `CHANGELOG.md has no "## [${version}]" section. Move the release's entries ` +
+        'out of Unreleased and commit the result before tagging.',
+    );
+  }
+
+  process.stdout.write(releaseNotes(version, repository, section));
 }
 
-if (args.length !== 1) {
-  fail('usage: node scripts~/release-notes.mjs <version> [--repo owner/name]');
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main();
 }
-
-const version = args[0];
-if (!semverPattern.test(version)) {
-  fail(`version must be a semantic version, received "${version}".`);
-}
-
-let changelog;
-try {
-  changelog = fs.readFileSync(changelogPath, 'utf8');
-} catch (error) {
-  fail(`unable to read CHANGELOG.md: ${error.message}`);
-}
-
-const section = changelogSection(changelog, version);
-if (!section) {
-  fail(
-    `CHANGELOG.md has no "## [${version}]" section. Move the release's entries ` +
-      'out of Unreleased and commit the result before tagging.',
-  );
-}
-
-process.stdout.write(releaseNotes(version, repository, section));

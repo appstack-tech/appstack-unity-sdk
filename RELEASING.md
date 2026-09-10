@@ -60,6 +60,11 @@ Complete the device-build matrix in [DEVELOPMENT.md](DEVELOPMENT.md), including:
 - Configure, events, ID/status calls, concurrent attribution callbacks, main
   thread delivery, and UTF-8 attribution values on both platforms.
 
+Run `node --test scripts~/release-notes.test.mjs`. It covers the changelog
+section extractor, including the heading matches that must not resolve: a tag
+whose version only prefixes a longer one, such as 1.2.1 against a 1.2.10
+section.
+
 Inspect the release archive before publishing. Adding it as a local package to a
 clean Unity project must produce the same package contents and behavior as a
 repository checkout.

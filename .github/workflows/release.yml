@@ -33,6 +33,9 @@ jobs:
           TAG_VERSION: ${{ steps.version.outputs.version }}
         run: node scripts~/set-version.mjs --check "$TAG_VERSION"
 
+      - name: Test release notes extraction
+        run: node --test scripts~/release-notes.test.mjs
+
       - name: Create root UPM package archive
         env:
           VERSION: ${{ steps.version.outputs.version }}
