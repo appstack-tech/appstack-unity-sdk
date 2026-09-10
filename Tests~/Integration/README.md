@@ -126,7 +126,11 @@ The machine-readable runtime probe and request validator prove that:
   standard event reach the native HTTP wire boundary;
 - `customer_user_id`, the `unity-<package version>` wrapper version, numbers,
   booleans, arrays, nested maps, and UTF-8 strings retain their expected wire
-  representation.
+  representation;
+- `HandleUniversalLink` returns the pinned native parser's own verdict for one
+  shared table of accepted and rejected links, identically on both platforms,
+  preserving percent-decoded path IDs, last-wins repeated query parameters, and
+  UTF-8 query values across the JSON bridge boundary.
 
 The backend also records native lifecycle or install events, but their exact
 count is deliberately not asserted because it is native-SDK state dependent.
@@ -134,7 +138,10 @@ count is deliberately not asserted because it is native-SDK state dependent.
 ### Not covered
 
 The local backend validates the wrapper/native boundary and native networking,
-not production service behavior. Simulator execution does not validate real
+not production service behavior. Link cases are handed to the SDK directly, so
+they prove native parsing through the production bridge but not the operating
+system's own delivery of a tapped link, which needs an app-specific verified
+domain. Simulator execution does not validate real
 Apple Ads attribution. Physical-device lifecycle transitions, deferred links,
 offline retry across process restarts, production TLS, and store-distributed
 release signing remain separate system or manual tests.
