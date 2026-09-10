@@ -23,7 +23,7 @@ cp "$BRIDGE_SOURCE" "$PACKAGE_DIR/Sources/AppstackUnityBridge/AppstackUnityBridg
 swift test --package-path "$PACKAGE_DIR"
 
 # Must match the pin in Editor/AppstackIOSPostProcessBuild.cs.
-EXPECTED_SDK_VERSION="4.6.0"
+EXPECTED_SDK_VERSION="4.7.0"
 
 EXACT_SDK_DIR="$TEMP_DIR/exact-sdk"
 mkdir -p "$EXACT_SDK_DIR"
@@ -115,6 +115,7 @@ EXPECTED_SYMBOLS=(
     AppstackUnityEnableAppleAdsAttribution
     AppstackUnityGetAppstackId
     AppstackUnityIsSdkDisabled
+    AppstackUnityHandleUniversalLink
     AppstackUnityGetAttributionParams
     AppstackUnityFreeCString
 )

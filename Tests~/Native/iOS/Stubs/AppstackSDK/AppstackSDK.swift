@@ -27,6 +27,17 @@ public enum EventType: String, CaseIterable {
     case CUSTOM
 }
 
+public struct LinkOptions {
+    public let allowedHosts: Set<String>?
+    public init(allowedHosts: Set<String>? = nil) { self.allowedHosts = allowedHosts }
+}
+
+public struct UniversalLinkResult {
+    public let deeplinkId: String?
+    public let queryParams: [String: String]
+    public let url: URL
+}
+
 public final class AppstackAttributionSdk {
     public struct ConfigureCall {
         public let apiKey: String
@@ -104,6 +115,28 @@ public final class AppstackAttributionSdk {
 
     public func isSdkDisabled() -> Bool {
         sdkDisabled
+    }
+
+    public func handleUniversalLink(
+        _ url: URL,
+        options: LinkOptions = LinkOptions()
+    ) -> UniversalLinkResult? {
+        guard url.scheme == "https",
+              let host = url.host,
+              host != "appstack.link",
+              host != "dev.appstack.link",
+              options.allowedHosts?.contains(host) ?? true else { return nil }
+        let segments = url.path.split(separator: "/")
+        guard segments.count == 1 else { return nil }
+        var params: [String: String] = [:]
+        URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.forEach {
+            params[$0.name] = $0.value ?? ""
+        }
+        return UniversalLinkResult(
+            deeplinkId: String(segments[0]),
+            queryParams: params,
+            url: url
+        )
     }
 
     public func getAttributionParams() async -> [String: Any]? {

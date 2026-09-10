@@ -43,6 +43,13 @@ namespace Appstack
             return bridge.IsSdkDisabled();
         }
 
+        public static Dictionary<string, object> HandleUniversalLink(
+            string url,
+            string[] allowedHosts)
+        {
+            return bridge.HandleUniversalLink(url, allowedHosts);
+        }
+
         public static void GetAttributionParams(
             Action<Dictionary<string, object>> onSuccess,
             Action<string> onError)
@@ -137,6 +144,11 @@ namespace Appstack
                 return AppstackAndroidBridge.IsSdkDisabled();
             }
 
+            public Dictionary<string, object> HandleUniversalLink(string url, string[] allowedHosts)
+            {
+                return AppstackAndroidBridge.HandleUniversalLink(url, allowedHosts);
+            }
+
             public void GetAttributionParams(
                 Action<Dictionary<string, object>> onSuccess,
                 Action<string> onError)
@@ -183,6 +195,11 @@ namespace Appstack
                 return AppstackIOSBridge.IsSdkDisabled();
             }
 
+            public Dictionary<string, object> HandleUniversalLink(string url, string[] allowedHosts)
+            {
+                return AppstackIOSBridge.HandleUniversalLink(url, allowedHosts);
+            }
+
             public void GetAttributionParams(
                 Action<Dictionary<string, object>> onSuccess,
                 Action<string> onError)
@@ -223,6 +240,11 @@ namespace Appstack
             public bool IsSdkDisabled()
             {
                 return true;
+            }
+
+            public Dictionary<string, object> HandleUniversalLink(string url, string[] allowedHosts)
+            {
+                return null;
             }
 
             public void GetAttributionParams(

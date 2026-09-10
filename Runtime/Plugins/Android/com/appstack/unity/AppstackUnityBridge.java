@@ -4,9 +4,11 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.net.Uri;
 import com.appstack.attribution.AppstackAttributionSdk;
 import com.appstack.attribution.EventType;
 import com.appstack.attribution.LogLevel;
+import com.appstack.attribution.LinkOptions;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -76,6 +78,22 @@ public final class AppstackUnityBridge {
 
     public static boolean isSdkDisabled() {
         return AppstackAttributionSdk.isSdkDisabled();
+    }
+
+    public static String handleUniversalLink(String url, String[] allowedHosts) throws Exception {
+        java.util.Set<String> hosts = allowedHosts == null
+                ? null
+                : new java.util.HashSet<>(java.util.Arrays.asList(allowedHosts));
+        com.appstack.attribution.AppLinkResult result = AppstackAttributionSdk.handleAppLink(
+                Uri.parse(url),
+                new LinkOptions(hosts));
+        if (result == null) return null;
+
+        JSONObject json = new JSONObject();
+        json.put("deeplinkId", result.getDeeplinkId() == null ? "" : result.getDeeplinkId());
+        json.put("queryParams", new JSONObject(result.getQueryParams()));
+        json.put("url", result.getUri().toString());
+        return json.toString();
     }
 
     @SuppressWarnings("unchecked")

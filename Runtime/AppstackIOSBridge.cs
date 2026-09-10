@@ -46,6 +46,11 @@ namespace Appstack
         private static extern int AppstackUnityIsSdkDisabled();
 
         [DllImport("__Internal")]
+        private static extern IntPtr AppstackUnityHandleUniversalLink(
+            string url,
+            string allowedHostsJson);
+
+        [DllImport("__Internal")]
         private static extern void AppstackUnityGetAttributionParams(
             int requestId,
             AttributionParamsCallback callback);
@@ -86,6 +91,20 @@ namespace Appstack
         public static bool IsSdkDisabled()
         {
             return AppstackUnityIsSdkDisabled() != 0;
+        }
+
+        public static Dictionary<string, object> HandleUniversalLink(
+            string url,
+            string[] allowedHosts)
+        {
+            var optionsJson = allowedHosts == null
+                ? null
+                : AppstackJson.SerializeObject(
+                    new Dictionary<string, object> { { "allowedHosts", allowedHosts } });
+            var json = PtrToUtf8StringAndFree(
+                AppstackUnityHandleUniversalLink(url, optionsJson));
+            if (string.IsNullOrEmpty(json)) return null;
+            return AppstackJson.ParseObject(json);
         }
 
         public static void GetAttributionParams(

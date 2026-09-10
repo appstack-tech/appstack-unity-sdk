@@ -82,6 +82,33 @@ public func AppstackUnityIsSdkDisabled() -> Int32 {
     AppstackAttributionSdk.shared.isSdkDisabled() ? 1 : 0
 }
 
+@_cdecl("AppstackUnityHandleUniversalLink")
+public func AppstackUnityHandleUniversalLink(
+    _ urlPointer: UnsafePointer<CChar>?,
+    _ allowedHostsJsonPointer: UnsafePointer<CChar>?
+) -> UnsafeMutablePointer<CChar>? {
+    guard let urlString = string(from: urlPointer),
+          let url = URL(string: urlString) else { return nil }
+
+    var allowedHosts: Set<String>?
+    if let json = string(from: allowedHostsJsonPointer),
+       let data = json.data(using: .utf8),
+       let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+       let hosts = object["allowedHosts"] as? [String] {
+        allowedHosts = Set(hosts)
+    }
+
+    guard let parsed = AppstackAttributionSdk.shared.handleUniversalLink(
+        url,
+        options: LinkOptions(allowedHosts: allowedHosts)
+    ), let json = jsonString(from: [
+        "deeplinkId": parsed.deeplinkId ?? "",
+        "queryParams": parsed.queryParams,
+        "url": parsed.url.absoluteString,
+    ]) else { return nil }
+    return retainedCString(json)
+}
+
 @_cdecl("AppstackUnityGetAttributionParams")
 public func AppstackUnityGetAttributionParams(
     _ requestId: Int32,

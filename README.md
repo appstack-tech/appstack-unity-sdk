@@ -129,6 +129,14 @@ application ingestion credentials, not administrative secrets.
 
 ## Public API
 
+### Universal Links and Android App Links
+
+Forward `Application.absoluteURL` at cold start and
+`Application.deepLinkActivated` events to
+`AppstackSDK.HandleUniversalLink(url, allowedHosts)`. Only branded-domain
+standard links with one path segment are supported. See [USAGE.md](USAGE.md#universal-links-and-android-app-links)
+for the full example and platform configuration.
+
 ### Configure
 
 ```csharp

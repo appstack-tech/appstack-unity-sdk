@@ -198,6 +198,21 @@ final class AppstackUnityBridgeTests: XCTestCase {
         AppstackUnityFreeCString(nil)
     }
 
+    func testUniversalLinkReturnsOwnedJsonCString() throws {
+        let pointer = "https://links.example.com/abc?screen=offer".withCString { url in
+            #"{"allowedHosts":["links.example.com"]}"#.withCString { hosts in
+                AppstackUnityHandleUniversalLink(url, hosts)
+            }
+        }
+        defer { AppstackUnityFreeCString(pointer) }
+        let json = try XCTUnwrap(pointer.map { String(cString: $0) })
+        let object = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: Any]
+        )
+        XCTAssertEqual(object["deeplinkId"] as? String, "abc")
+        XCTAssertEqual((object["queryParams"] as? [String: String])?["screen"], "offer")
+    }
+
     func testAttributionSuccessReturnsJsonAndOwnedCString() throws {
         AppstackAttributionSdk.shared.attributionResult = [
             "campaign": "Café 夏 🚀",

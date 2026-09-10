@@ -1,6 +1,7 @@
 package com.appstack.attribution
 
 import android.content.Context
+import android.net.Uri
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -33,6 +34,14 @@ enum class EventType {
     SHARE,
     CUSTOM,
 }
+
+class LinkOptions(val allowedHosts: Set<String>? = null)
+
+data class AppLinkResult(
+    val deeplinkId: String?,
+    val queryParams: Map<String, String>,
+    val uri: Uri,
+)
 
 object AppstackAttributionSdk {
     enum class AttributionMode {
@@ -90,6 +99,9 @@ object AppstackAttributionSdk {
     private var attributionContinuation: Continuation<Map<String, String>>? = null
 
     @JvmStatic
+    var appLinkResult: AppLinkResult? = null
+
+    @JvmStatic
     fun reset() {
         configureCall = null
         customerUserIdCalls.clear()
@@ -101,6 +113,7 @@ object AppstackAttributionSdk {
         attributionResult = emptyMap()
         attributionCalls = 0
         attributionContinuation = null
+        appLinkResult = null
     }
 
     @JvmStatic
@@ -145,6 +158,9 @@ object AppstackAttributionSdk {
 
     @JvmStatic
     fun isSdkDisabled(): Boolean = sdkDisabled
+
+    @JvmStatic
+    fun handleAppLink(uri: Uri, options: LinkOptions): AppLinkResult? = appLinkResult
 
     @JvmStatic
     suspend fun awaitAttributionParams(rawReferrer: String?): Map<String, String> {

@@ -23,5 +23,5 @@ android {
 dependencies {
     // Must match Editor/AppstackDependencies.xml: this module exists to compile the
     // real bridge against the real artifact the package resolves at runtime.
-    implementation("tech.appstack.android-sdk:appstack-android-sdk:1.8.0")
+    implementation("tech.appstack.android-sdk:appstack-android-sdk:1.9.0")
 }

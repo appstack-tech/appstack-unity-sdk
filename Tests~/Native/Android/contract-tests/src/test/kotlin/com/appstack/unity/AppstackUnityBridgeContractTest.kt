@@ -7,6 +7,8 @@ import android.os.Bundle
 import com.appstack.attribution.AppstackAttributionSdk
 import com.appstack.attribution.EventType
 import com.appstack.attribution.LogLevel
+import com.appstack.attribution.AppLinkResult
+import android.net.Uri
 import org.json.JSONObject
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -145,6 +147,23 @@ class AppstackUnityBridgeContractTest {
         AppstackUnityBridge.sendEvent("LOGIN", null, "not-json")
 
         assertNull(AppstackAttributionSdk.eventCall?.parameters)
+    }
+
+    @Test
+    fun `universal link result crosses the Java boundary as JSON`() {
+        AppstackAttributionSdk.appLinkResult = AppLinkResult(
+            "abc",
+            mapOf("screen" to "offer"),
+            Uri.parse("https://links.example.com/abc?screen=offer"),
+        )
+
+        val json = JSONObject(AppstackUnityBridge.handleUniversalLink(
+            "https://links.example.com/abc?screen=offer",
+            arrayOf("links.example.com"),
+        ))
+
+        assertEquals("abc", json.getString("deeplinkId"))
+        assertEquals("offer", json.getJSONObject("queryParams").getString("screen"))
     }
 
     @Test

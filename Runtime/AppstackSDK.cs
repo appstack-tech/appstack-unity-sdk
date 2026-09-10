@@ -5,6 +5,13 @@ using UnityEngine;
 
 namespace Appstack
 {
+    public sealed class AppstackLinkResult
+    {
+        public string DeeplinkId { get; internal set; }
+        public Dictionary<string, string> QueryParams { get; internal set; }
+        public string Url { get; internal set; }
+    }
+
     /// <summary>
     /// Main Appstack SDK class for Unity. Same API surface as Flutter and React Native SDKs.
     /// </summary>
@@ -234,6 +241,56 @@ namespace Appstack
                 Debug.LogError($"[AppstackSDK] IsSdkDisabled failed: {e.Message}");
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Parse an Appstack standard Universal/App Link delivered by
+        /// Application.absoluteURL or Application.deepLinkActivated. Safe before Configure.
+        /// </summary>
+        public static AppstackLinkResult HandleUniversalLink(
+            string url,
+            string[] allowedHosts = null)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                throw new ArgumentException("url must be a non-empty string", nameof(url));
+            if (allowedHosts != null && Array.Exists(
+                    allowedHosts,
+                    string.IsNullOrWhiteSpace))
+                throw new ArgumentException(
+                    "allowedHosts must contain only non-empty hostnames",
+                    nameof(allowedHosts));
+
+            Dictionary<string, object> raw;
+            try
+            {
+                raw = AppstackSDKNative.HandleUniversalLink(
+                    url.Trim(),
+                    allowedHosts == null
+                        ? null
+                        : Array.ConvertAll(allowedHosts, host => host.Trim()));
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[AppstackSDK] HandleUniversalLink failed: {e.Message}");
+                throw;
+            }
+
+            if (raw == null || raw.Count == 0) return null;
+
+            var queryParams = new Dictionary<string, string>();
+            if (raw.TryGetValue("queryParams", out var queryValue) &&
+                queryValue is Dictionary<string, object> queryDictionary)
+            {
+                foreach (var pair in queryDictionary)
+                    queryParams[pair.Key] = pair.Value?.ToString() ?? string.Empty;
+            }
+
+            return new AppstackLinkResult
+            {
+                DeeplinkId = raw.TryGetValue("deeplinkId", out var id) ? id?.ToString() : null,
+                QueryParams = queryParams,
+                Url = raw.TryGetValue("url", out var parsedUrl) ? parsedUrl?.ToString() : null,
+            };
         }
 
         /// <summary>
