@@ -7,5 +7,19 @@
     <meta-data
       android:name="APPSTACK_DEV_PROXY_URL"
       android:value="__APPSTACK_RUNTIME_PROXY_URL__" />
+    <!-- Merges the App Link filter into Unity's own activity so the operating
+         system, not the test, decides that this player handles the link host.
+         Local approval replaces Digital Asset Links verification, which cannot
+         succeed for a fixture signed with a debug key. -->
+    <activity
+        android:name="com.unity3d.player.UnityPlayerGameActivity"
+        android:exported="true">
+      <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="https" android:host="__APPSTACK_RUNTIME_LINK_HOST__" />
+      </intent-filter>
+    </activity>
   </application>
 </manifest>
