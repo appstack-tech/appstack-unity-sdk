@@ -260,11 +260,21 @@ namespace Appstack
                     "allowedHosts must contain only non-empty hostnames",
                     nameof(allowedHosts));
 
-            var raw = AppstackSDKNative.HandleUniversalLink(
-                url.Trim(),
-                allowedHosts == null
-                    ? null
-                    : Array.ConvertAll(allowedHosts, host => host.Trim()));
+            Dictionary<string, object> raw;
+            try
+            {
+                raw = AppstackSDKNative.HandleUniversalLink(
+                    url.Trim(),
+                    allowedHosts == null
+                        ? null
+                        : Array.ConvertAll(allowedHosts, host => host.Trim()));
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[AppstackSDK] HandleUniversalLink failed: {e.Message}");
+                throw;
+            }
+
             if (raw == null || raw.Count == 0) return null;
 
             var queryParams = new Dictionary<string, string>();
