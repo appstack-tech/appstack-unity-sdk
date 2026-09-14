@@ -7,6 +7,8 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-14
+
 ### Added
 
 - `await AppstackSDK.DeleteUserData()` permanently deletes the current user's
