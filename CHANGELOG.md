@@ -5,6 +5,13 @@ All notable changes to the Appstack Unity SDK are documented in this file.
 The format is based on [Keep a
 Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Changed
+
+- Pinned Appstack iOS SDK is now `4.7.1`, which fixes Swift 6 build errors when
+  referencing `AppstackAttributionSdk.shared` or `AppstackASAAttribution.shared`.
+
 ## [1.4.0] - 2026-09-10
 
 ### Added
