@@ -13,12 +13,19 @@ namespace Appstack
             new PendingRequestRegistry<Dictionary<string, object>>();
         private static readonly AttributionParamsCallback NativeCallback =
             OnAttributionParamsReceived;
+        private static readonly PendingRequestRegistry<bool> DeleteRequests =
+            new PendingRequestRegistry<bool>();
+        private static readonly DeleteUserDataCallback NativeDeleteCallback =
+            OnDeleteUserDataCompleted;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void AttributionParamsCallback(
             int requestId,
             IntPtr json,
             IntPtr error);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void DeleteUserDataCallback(int requestId, IntPtr error);
 
         [DllImport("__Internal")]
         private static extern void AppstackUnityConfigure(
@@ -29,6 +36,11 @@ namespace Appstack
 
         [DllImport("__Internal")]
         private static extern void AppstackUnitySetCustomerUserId(string customerUserId);
+
+        [DllImport("__Internal")]
+        private static extern void AppstackUnityDeleteUserData(
+            int requestId,
+            DeleteUserDataCallback callback);
 
         [DllImport("__Internal")]
         private static extern void AppstackUnitySendEvent(
@@ -71,6 +83,23 @@ namespace Appstack
         {
             // Empty reaches Swift as the clear marker; never marshal a null string.
             AppstackUnitySetCustomerUserId(customerUserId ?? string.Empty);
+        }
+
+        public static void DeleteUserData(Action onSuccess, Action<string> onError)
+        {
+            var requestId = DeleteRequests.Register(
+                _ => onSuccess?.Invoke(),
+                onError,
+                SynchronizationContext.Current);
+
+            try
+            {
+                AppstackUnityDeleteUserData(requestId, NativeDeleteCallback);
+            }
+            catch (Exception exception)
+            {
+                DeleteRequests.TryComplete(requestId, () => false, exception.Message);
+            }
         }
 
         public static void SendEvent(string eventType, string eventName, string parametersJson)
@@ -137,6 +166,13 @@ namespace Appstack
             var json = PtrToUtf8StringAndFree(jsonPointer);
             var error = PtrToUtf8StringAndFree(errorPointer);
             CompleteRequest(requestId, json, error);
+        }
+
+        [AOT.MonoPInvokeCallback(typeof(DeleteUserDataCallback))]
+        private static void OnDeleteUserDataCompleted(int requestId, IntPtr errorPointer)
+        {
+            var error = PtrToUtf8StringAndFree(errorPointer);
+            DeleteRequests.TryComplete(requestId, () => true, error);
         }
 
         private static void CompleteRequest(int requestId, string json, string error)

@@ -28,6 +28,7 @@ The initial public API is defined by `Runtime/AppstackSDK.cs`:
 - `Configure(apiKey, logLevel, customerUserId)`
 - `SetCustomerUserId(customerUserId)`
 - `ClearCustomerUserId()`
+- `DeleteUserData()`
 - `SendEvent(eventType, eventName, parameters)`
 - `EnableAppleAdsAttribution()`
 - `GetAppstackId()`
@@ -55,8 +56,8 @@ Cross-platform behavior that must remain aligned:
   `SetCustomerUserId(null)`, added because C# call sites read better with it; it
   adds no behavior the other wrappers lack.
 - Native event-type parsing is case-insensitive and locale-independent.
-- Attribution callbacks support concurrent requests and return to the captured
-  synchronization context when available.
+- Attribution and user-data deletion callbacks support concurrent requests and
+  return to the captured synchronization context when available.
 - Strings crossing the iOS C boundary are UTF-8 and must be released through
   the matching bridge function.
 - The first successful `Configure` call wins inside the Unity wrapper. Exact
@@ -91,7 +92,7 @@ injection, and environment variables are intentionally deferred.
 
 Dependency versions are declared in the platform-specific editor integration:
 
-- Android: `tech.appstack.android-sdk:appstack-android-sdk:1.9.0` in
+- Android: `tech.appstack.android-sdk:appstack-android-sdk:1.10.0` in
   `Editor/AppstackDependencies.xml`
 - iOS: `AppstackSDK` Swift package product at `4.7.0` in
   `Editor/AppstackIOSPostProcessBuild.cs`

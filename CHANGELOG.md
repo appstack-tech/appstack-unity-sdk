@@ -5,6 +5,17 @@ All notable changes to the Appstack Unity SDK are documented in this file.
 The format is based on [Keep a
 Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Added
+
+- `await AppstackSDK.DeleteUserData()` permanently deletes the current user's
+  Appstack data for GDPR and other privacy deletion requests.
+
+### Changed
+
+- Pinned the Appstack Android SDK to `1.10.0` for native user-data deletion.
+
 ## [1.4.0] - 2026-09-10
 
 ### Added

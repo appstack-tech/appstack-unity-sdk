@@ -77,6 +77,8 @@ if [[ "$MODE" == "all" || "$MODE" == "android" ]]; then
   grep -F "com.appstack.unity.AppstackUnityBridge" "$dex_packages" >/dev/null
   grep -F 'com.appstack.unity.AppstackUnityBridge$AttributionParamsCallback' \
     "$dex_packages" >/dev/null
+  grep -F 'com.appstack.unity.AppstackUnityBridge$DeleteUserDataCallback' \
+    "$dex_packages" >/dev/null
   echo "Android development/release builds and minified JNI retention passed."
 fi
 

@@ -11,11 +11,17 @@ namespace Appstack
         private const string UnityBridgeClassName = "com.appstack.unity.AppstackUnityBridge";
         private const string CallbackInterfaceName =
             "com.appstack.unity.AppstackUnityBridge$AttributionParamsCallback";
+        private const string DeleteCallbackInterfaceName =
+            "com.appstack.unity.AppstackUnityBridge$DeleteUserDataCallback";
 
         private static readonly PendingRequestRegistry<Dictionary<string, object>> Requests =
             new PendingRequestRegistry<Dictionary<string, object>>();
         private static readonly AttributionCallbackProxy NativeCallback =
             new AttributionCallbackProxy();
+        private static readonly PendingRequestRegistry<bool> DeleteRequests =
+            new PendingRequestRegistry<bool>();
+        private static readonly DeleteCallbackProxy NativeDeleteCallback =
+            new DeleteCallbackProxy();
         private static readonly Lazy<AndroidJavaClass> UnityBridge =
             new Lazy<AndroidJavaClass>(() => new AndroidJavaClass(UnityBridgeClassName));
         private sealed class AttributionCallbackProxy : AndroidJavaProxy
@@ -27,6 +33,18 @@ namespace Appstack
             public void onResult(int requestId, string json, string error)
             {
                 CompleteRequest(requestId, json, error);
+            }
+        }
+
+        private sealed class DeleteCallbackProxy : AndroidJavaProxy
+        {
+            public DeleteCallbackProxy() : base(DeleteCallbackInterfaceName)
+            {
+            }
+
+            public void onResult(int requestId, string error)
+            {
+                DeleteRequests.TryComplete(requestId, () => true, error);
             }
         }
 
@@ -54,6 +72,26 @@ namespace Appstack
             UnityBridge.Value.CallStatic(
                 "setCustomerUserId",
                 customerUserId ?? string.Empty);
+        }
+
+        public static void DeleteUserData(Action onSuccess, Action<string> onError)
+        {
+            var requestId = DeleteRequests.Register(
+                _ => onSuccess?.Invoke(),
+                onError,
+                SynchronizationContext.Current);
+
+            try
+            {
+                UnityBridge.Value.CallStatic(
+                    "deleteUserData",
+                    requestId,
+                    NativeDeleteCallback);
+            }
+            catch (Exception exception)
+            {
+                DeleteRequests.TryComplete(requestId, () => false, exception.Message);
+            }
         }
 
         public static void SendEvent(string eventType, string eventName, string parametersJson)

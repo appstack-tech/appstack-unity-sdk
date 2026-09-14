@@ -18,6 +18,7 @@ namespace Appstack.Tests
             "  void Configure(string apiKey, int logLevel = 1, string customerUserId = null)\n" +
             "  void SetCustomerUserId(string customerUserId)\n" +
             "  void ClearCustomerUserId()\n" +
+            "  Task DeleteUserData()\n" +
             "  void SendEvent(EventType eventType, string eventName = null, " +
             "Dictionary<string, object> parameters = null)\n" +
             "  void EnableAppleAdsAttribution()\n" +

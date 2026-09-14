@@ -23,6 +23,11 @@ namespace Appstack
             bridge.SetCustomerUserId(customerUserId);
         }
 
+        public static void DeleteUserData(Action onSuccess, Action<string> onError)
+        {
+            bridge.DeleteUserData(onSuccess, onError);
+        }
+
         public static void SendEvent(string eventType, string eventName, string parametersJson)
         {
             bridge.SendEvent(eventType, eventName, parametersJson);
@@ -124,6 +129,11 @@ namespace Appstack
                 AppstackAndroidBridge.SetCustomerUserId(customerUserId);
             }
 
+            public void DeleteUserData(Action onSuccess, Action<string> onError)
+            {
+                AppstackAndroidBridge.DeleteUserData(onSuccess, onError);
+            }
+
             public void SendEvent(string eventType, string eventName, string parametersJson)
             {
                 AppstackAndroidBridge.SendEvent(eventType, eventName, parametersJson);
@@ -175,6 +185,11 @@ namespace Appstack
                 AppstackIOSBridge.SetCustomerUserId(customerUserId);
             }
 
+            public void DeleteUserData(Action onSuccess, Action<string> onError)
+            {
+                AppstackIOSBridge.DeleteUserData(onSuccess, onError);
+            }
+
             public void SendEvent(string eventType, string eventName, string parametersJson)
             {
                 AppstackIOSBridge.SendEvent(eventType, eventName, parametersJson);
@@ -220,6 +235,11 @@ namespace Appstack
             public void SetCustomerUserId(string customerUserId)
             {
                 // Intentionally ignored outside supported mobile players.
+            }
+
+            public void DeleteUserData(Action onSuccess, Action<string> onError)
+            {
+                onSuccess?.Invoke();
             }
 
             public void SendEvent(string eventType, string eventName, string parametersJson)

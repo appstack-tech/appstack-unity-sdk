@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Appstack
@@ -23,6 +24,7 @@ namespace Appstack
     /// // Set the customer user ID later (e.g. on login), or clear it on logout
     /// AppstackSDK.SetCustomerUserId("user-123");
     /// AppstackSDK.ClearCustomerUserId();
+    /// await AppstackSDK.DeleteUserData(); // GDPR/privacy deletion request
     ///
     /// // Send events
     /// AppstackSDK.SendEvent(EventType.PURCHASE, parameters: new Dictionary&lt;string, object&gt; { { "revenue", 29.99 }, { "currency", "USD" } });
@@ -160,6 +162,37 @@ namespace Appstack
         public static void ClearCustomerUserId()
         {
             SetCustomerUserId(null);
+        }
+
+        /// <summary>
+        /// Permanently delete the current user's Appstack data for a GDPR or other
+        /// privacy deletion request. The task completes after the native request finishes.
+        /// </summary>
+        public static Task DeleteUserData()
+        {
+            var completion = new TaskCompletionSource<object>(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+
+            try
+            {
+                AppstackSDKNative.DeleteUserData(
+                    () => completion.TrySetResult(null),
+                    error =>
+                    {
+                        var message = string.IsNullOrEmpty(error)
+                            ? "Native user-data deletion failed."
+                            : error;
+                        Debug.LogError($"[AppstackSDK] DeleteUserData failed: {message}");
+                        completion.TrySetException(new InvalidOperationException(message));
+                    });
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[AppstackSDK] DeleteUserData failed: {e.Message}");
+                completion.TrySetException(e);
+            }
+
+            return completion.Task;
         }
 
         /// <summary>

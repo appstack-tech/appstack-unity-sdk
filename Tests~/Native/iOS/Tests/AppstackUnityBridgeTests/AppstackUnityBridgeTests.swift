@@ -26,6 +26,20 @@ private func recordAttributionCallback(
     expectation?.fulfill()
 }
 
+private func recordDeleteUserDataCallback(
+    _ requestId: Int32,
+    _ error: UnsafeMutablePointer<CChar>?
+) {
+    callbackLock.lock()
+    callbackRequestId = requestId
+    callbackError = error.map { String(cString: $0) }
+    let expectation = callbackExpectation
+    callbackLock.unlock()
+
+    AppstackUnityFreeCString(error)
+    expectation?.fulfill()
+}
+
 final class AppstackUnityBridgeTests: XCTestCase {
     override func setUp() {
         super.setUp()
@@ -112,6 +126,29 @@ final class AppstackUnityBridgeTests: XCTestCase {
         callSetCustomerUserId("customer-123")
 
         XCTAssertNil(AppstackAttributionSdk.shared.configureCall)
+    }
+
+    func testDeleteUserDataSuccessReturnsMatchingRequestId() {
+        callbackExpectation = expectation(description: "delete callback")
+
+        AppstackUnityDeleteUserData(61, recordDeleteUserDataCallback)
+
+        waitForExpectations(timeout: 2)
+        XCTAssertEqual(callbackRequestId, 61)
+        XCTAssertNil(callbackError)
+        XCTAssertEqual(AppstackAttributionSdk.shared.deleteCalls, 1)
+    }
+
+    func testDeleteUserDataFailureReturnsOwnedErrorCString() {
+        AppstackAttributionSdk.shared.deleteShouldFail = true
+        callbackExpectation = expectation(description: "delete error callback")
+
+        AppstackUnityDeleteUserData(62, recordDeleteUserDataCallback)
+
+        waitForExpectations(timeout: 2)
+        XCTAssertEqual(callbackRequestId, 62)
+        XCTAssertNotNil(callbackError)
+        XCTAssertEqual(AppstackAttributionSdk.shared.deleteCalls, 1)
     }
 
     func testDevelopmentProxyReadsExpectedInfoPlistKey() throws {

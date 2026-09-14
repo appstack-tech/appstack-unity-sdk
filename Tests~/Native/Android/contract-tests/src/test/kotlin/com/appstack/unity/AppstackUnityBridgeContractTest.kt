@@ -104,6 +104,55 @@ class AppstackUnityBridgeContractTest {
         )
     }
 
+    @Test
+    fun `deleteUserData immediate completion returns matching request id`() {
+        val callbacks = AtomicInteger()
+        var callbackId = 0
+        var callbackError: String? = "not-called"
+
+        AppstackUnityBridge.deleteUserData(31) { id, error ->
+            callbacks.incrementAndGet()
+            callbackId = id
+            callbackError = error
+        }
+
+        assertEquals(1, AppstackAttributionSdk.deleteCalls)
+        assertEquals(1, callbacks.get())
+        assertEquals(31, callbackId)
+        assertNull(callbackError)
+    }
+
+    @Test
+    fun `deleteUserData suspended completion resumes once`() {
+        AppstackAttributionSdk.deleteMode = AppstackAttributionSdk.DeleteMode.SUSPENDED
+        val callbacks = AtomicInteger()
+        var callbackError: String? = "not-called"
+
+        AppstackUnityBridge.deleteUserData(32) { _, error ->
+            callbacks.incrementAndGet()
+            callbackError = error
+        }
+
+        assertEquals(0, callbacks.get())
+        AppstackAttributionSdk.completeDeletion()
+        assertEquals(1, callbacks.get())
+        assertNull(callbackError)
+    }
+
+    @Test
+    fun `deleteUserData failures reach error callback`() {
+        AppstackAttributionSdk.deleteMode = AppstackAttributionSdk.DeleteMode.FAILURE
+        var immediateError: String? = null
+        AppstackUnityBridge.deleteUserData(33) { _, error -> immediateError = error }
+        assertTrue(immediateError?.contains("native deletion failure") == true)
+
+        AppstackAttributionSdk.deleteMode = AppstackAttributionSdk.DeleteMode.SUSPENDED
+        var suspendedError: String? = null
+        AppstackUnityBridge.deleteUserData(34) { _, error -> suspendedError = error }
+        AppstackAttributionSdk.failDeletion()
+        assertTrue(suspendedError?.contains("suspended deletion failure") == true)
+    }
+
     @ParameterizedTest
     @MethodSource("knownEvents")
     fun `sendEvent maps every known event`(eventType: EventType) {

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -226,6 +227,40 @@ namespace Appstack.Tests
             Assert.That(logHandler.Messages, Has.Some.Contains("set id failed"));
         }
 
+        [Test]
+        public async Task DeleteUserDataCompletesAfterNativeSuccess()
+        {
+            bridge.DeleteInvocation = (onSuccess, _) => onSuccess();
+
+            await AppstackSDK.DeleteUserData();
+
+            Assert.That(bridge.DeleteCalls, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void DeleteUserDataFaultsAfterNativeError()
+        {
+            bridge.DeleteInvocation = (_, onError) => onError("native deletion failed");
+
+            var exception = Assert.ThrowsAsync<InvalidOperationException>(
+                async () => await AppstackSDK.DeleteUserData());
+
+            Assert.That(exception.Message, Is.EqualTo("native deletion failed"));
+            Assert.That(logHandler.Messages, Has.Some.Contains("native deletion failed"));
+        }
+
+        [Test]
+        public void DeleteUserDataTurnsSynchronousBridgeFailureIntoFaultedTask()
+        {
+            bridge.DeleteException = new InvalidOperationException("bridge failed");
+
+            var exception = Assert.ThrowsAsync<InvalidOperationException>(
+                async () => await AppstackSDK.DeleteUserData());
+
+            Assert.That(exception, Is.SameAs(bridge.DeleteException));
+            Assert.That(logHandler.Messages, Has.Some.Contains("bridge failed"));
+        }
+
         [TestCaseSource(nameof(AllEventTypes))]
         public void SendEventMapsEveryEventAndDropsStandardEventNames(EventType eventType)
         {
@@ -428,6 +463,9 @@ namespace Appstack.Tests
             public Exception ConfigureException { get; set; }
             public List<string> CustomerUserIds { get; } = new List<string>();
             public Exception SetCustomerUserIdException { get; set; }
+            public int DeleteCalls { get; private set; }
+            public Exception DeleteException { get; set; }
+            public Action<Action, Action<string>> DeleteInvocation { get; set; }
             public int SendEventCalls { get; private set; }
             public string EventType { get; private set; }
             public string EventName { get; private set; }
@@ -459,6 +497,13 @@ namespace Appstack.Tests
             {
                 CustomerUserIds.Add(customerUserId);
                 if (SetCustomerUserIdException != null) throw SetCustomerUserIdException;
+            }
+
+            public void DeleteUserData(Action onSuccess, Action<string> onError)
+            {
+                DeleteCalls++;
+                if (DeleteException != null) throw DeleteException;
+                DeleteInvocation?.Invoke(onSuccess, onError);
             }
 
             public void SendEvent(string eventType, string eventName, string parametersJson)

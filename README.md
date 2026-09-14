@@ -177,6 +177,19 @@ itself: make sure at least one event follows, or no mapping is ever formed.
 Calling `Configure` again to change the ID does not work — a repeat `Configure`
 is a no-op and its `customerUserId` is ignored.
 
+### Delete user data
+
+For GDPR or another privacy deletion request, permanently delete the current
+user's Appstack data and wait for the native request to finish:
+
+```csharp
+await AppstackSDK.DeleteUserData();
+```
+
+The returned task completes on success and faults if the native SDK cannot
+complete the request. This is different from `ClearCustomerUserId()`, which
+only removes the customer user ID stored on the device.
+
 ### Send standard and custom events
 
 ```csharp

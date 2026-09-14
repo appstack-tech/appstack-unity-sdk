@@ -50,6 +50,12 @@ object AppstackAttributionSdk {
         FAILURE,
     }
 
+    enum class DeleteMode {
+        IMMEDIATE,
+        SUSPENDED,
+        FAILURE,
+    }
+
     data class ConfigureCall(
         val context: Context,
         val apiKey: String,
@@ -96,7 +102,15 @@ object AppstackAttributionSdk {
     var attributionCalls: Int = 0
         private set
 
+    @JvmStatic
+    var deleteMode: DeleteMode = DeleteMode.IMMEDIATE
+
+    @JvmStatic
+    var deleteCalls: Int = 0
+        private set
+
     private var attributionContinuation: Continuation<Map<String, String>>? = null
+    private var deleteContinuation: Continuation<Unit>? = null
 
     @JvmStatic
     var appLinkResult: AppLinkResult? = null
@@ -113,6 +127,9 @@ object AppstackAttributionSdk {
         attributionResult = emptyMap()
         attributionCalls = 0
         attributionContinuation = null
+        deleteMode = DeleteMode.IMMEDIATE
+        deleteCalls = 0
+        deleteContinuation = null
         appLinkResult = null
     }
 
@@ -142,6 +159,30 @@ object AppstackAttributionSdk {
     @JvmStatic
     fun setCustomerUserId(customerUserId: String?) {
         customerUserIdCalls.add(customerUserId)
+    }
+
+    @JvmStatic
+    suspend fun deleteUserData() {
+        deleteCalls++
+        when (deleteMode) {
+            DeleteMode.IMMEDIATE -> Unit
+            DeleteMode.FAILURE -> throw IllegalStateException("native deletion failure")
+            DeleteMode.SUSPENDED -> suspendCoroutine { deleteContinuation = it }
+        }
+    }
+
+    @JvmStatic
+    fun completeDeletion() {
+        val continuation = deleteContinuation ?: error("No deletion is suspended.")
+        deleteContinuation = null
+        continuation.resume(Unit)
+    }
+
+    @JvmStatic
+    fun failDeletion(error: Throwable = IllegalStateException("suspended deletion failure")) {
+        val continuation = deleteContinuation ?: kotlin.error("No deletion is suspended.")
+        deleteContinuation = null
+        continuation.resumeWithException(error)
     }
 
     @JvmStatic
