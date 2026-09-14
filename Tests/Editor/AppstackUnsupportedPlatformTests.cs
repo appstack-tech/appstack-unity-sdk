@@ -20,6 +20,7 @@ namespace Appstack.Tests
                 AppstackSDK.Configure("api-key");
                 AppstackSDK.SetCustomerUserId("customer-123");
                 AppstackSDK.ClearCustomerUserId();
+                AppstackSDK.DeleteUserData().GetAwaiter().GetResult();
                 AppstackSDK.SendEvent(EventType.LOGIN);
                 AppstackSDK.EnableAppleAdsAttribution();
 

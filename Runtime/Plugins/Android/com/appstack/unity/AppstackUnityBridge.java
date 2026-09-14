@@ -31,6 +31,11 @@ public final class AppstackUnityBridge {
         void onResult(int requestId, String json, String error);
     }
 
+    /** May run on any thread; C# posts to the captured context when available. */
+    public interface DeleteUserDataCallback {
+        void onResult(int requestId, String error);
+    }
+
     private AppstackUnityBridge() {
     }
 
@@ -59,6 +64,40 @@ public final class AppstackUnityBridge {
     /** Empty means "clear the id" here — on configure() it means "not provided". */
     public static void setCustomerUserId(String customerUserId) {
         AppstackAttributionSdk.setCustomerUserId(emptyToNull(customerUserId));
+    }
+
+    public static void deleteUserData(
+            final int requestId,
+            final DeleteUserDataCallback callback) {
+        if (callback == null) {
+            return;
+        }
+
+        try {
+            Object result = AppstackAttributionSdk.deleteUserData(
+                    new Continuation<kotlin.Unit>() {
+                        @Override
+                        public CoroutineContext getContext() {
+                            return EmptyCoroutineContext.INSTANCE;
+                        }
+
+                        @Override
+                        public void resumeWith(Object result) {
+                            try {
+                                ResultKt.throwOnFailure(result);
+                                callback.onResult(requestId, null);
+                            } catch (Throwable throwable) {
+                                callback.onResult(requestId, errorMessage(throwable));
+                            }
+                        }
+                    });
+
+            if (result != IntrinsicsKt.getCOROUTINE_SUSPENDED()) {
+                callback.onResult(requestId, null);
+            }
+        } catch (Throwable throwable) {
+            callback.onResult(requestId, errorMessage(throwable));
+        }
     }
 
     public static void sendEvent(

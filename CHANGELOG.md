@@ -7,8 +7,14 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `await AppstackSDK.DeleteUserData()` permanently deletes the current user's
+  Appstack data for GDPR and other privacy deletion requests.
+
 ### Changed
 
+- Pinned the Appstack Android SDK to `1.10.0` for native user-data deletion.
 - Pinned Appstack iOS SDK is now `4.7.1`, which fixes Swift 6 build errors when
   referencing `AppstackAttributionSdk.shared` or `AppstackASAAttribution.shared`.
 

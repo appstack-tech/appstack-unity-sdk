@@ -56,7 +56,8 @@ calling `Configure`.
 Android builds both a development and a release IL2CPP APK. Release
 minification is enabled. The fixture verifies that the generated
 `proguard-unity.txt` has one Appstack block, then inspects the release DEX to
-prove that `AppstackUnityBridge` and `AttributionParamsCallback` survived R8.
+prove that `AppstackUnityBridge`, `AttributionParamsCallback`, and
+`DeleteUserDataCallback` survived R8.
 
 iOS exports an IL2CPP Xcode project and verifies all of the following before
 compiling it without code signing:

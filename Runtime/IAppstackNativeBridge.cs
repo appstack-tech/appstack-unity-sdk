@@ -15,6 +15,8 @@ namespace Appstack
         /// <summary>An empty <paramref name="customerUserId"/> clears the stored id.</summary>
         void SetCustomerUserId(string customerUserId);
 
+        void DeleteUserData(Action onSuccess, Action<string> onError);
+
         void SendEvent(string eventType, string eventName, string parametersJson);
 
         void EnableAppleAdsAttribution();

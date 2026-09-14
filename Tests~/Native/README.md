@@ -9,7 +9,7 @@ package artifact.
 The Android fixture has two modules:
 
 - `real-artifact` compiles the production Java bridge against
-  `tech.appstack.android-sdk:appstack-android-sdk:1.9.0`, which must match
+  `tech.appstack.android-sdk:appstack-android-sdk:1.10.0`, which must match
   `Editor/AppstackDependencies.xml`.
 - `contract-tests` compiles the same bridge against recording stubs and tests
   configuration, proxy metadata, log/event mapping, JSON conversion, getters,

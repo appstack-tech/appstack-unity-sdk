@@ -8,6 +8,12 @@ public typealias AppstackUnityAttributionCallback = @convention(c) (
     UnsafeMutablePointer<CChar>?
 ) -> Void
 
+/// May run on any thread; C# posts to the captured context when available.
+public typealias AppstackUnityDeleteUserDataCallback = @convention(c) (
+    Int32,
+    UnsafeMutablePointer<CChar>?
+) -> Void
+
 @_cdecl("AppstackUnityConfigure")
 public func AppstackUnityConfigure(
     _ apiKeyPointer: UnsafePointer<CChar>?,
@@ -44,6 +50,21 @@ public func AppstackUnitySetCustomerUserId(
     _ customerUserIdPointer: UnsafePointer<CChar>?
 ) {
     AppstackAttributionSdk.shared.setCustomerUserId(string(from: customerUserIdPointer))
+}
+
+@_cdecl("AppstackUnityDeleteUserData")
+public func AppstackUnityDeleteUserData(
+    _ requestId: Int32,
+    _ callback: AppstackUnityDeleteUserDataCallback?
+) {
+    Task {
+        do {
+            try await AppstackAttributionSdk.shared.deleteUserData()
+            callback?(requestId, nil)
+        } catch {
+            callback?(requestId, retainedCString(error.localizedDescription))
+        }
+    }
 }
 
 @_cdecl("AppstackUnitySendEvent")

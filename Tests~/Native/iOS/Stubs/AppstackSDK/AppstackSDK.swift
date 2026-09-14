@@ -39,6 +39,9 @@ public struct UniversalLinkResult {
 }
 
 public final class AppstackAttributionSdk {
+    public enum DeleteError: Error {
+        case failed
+    }
     public struct ConfigureCall {
         public let apiKey: String
         public let logLevel: LogLevel
@@ -63,6 +66,8 @@ public final class AppstackAttributionSdk {
     public var sdkDisabled = false
     public var attributionResult: [String: Any]?
     public private(set) var attributionCalls = 0
+    public var deleteShouldFail = false
+    public private(set) var deleteCalls = 0
 
     private init() {}
 
@@ -75,6 +80,8 @@ public final class AppstackAttributionSdk {
         sdkDisabled = false
         attributionResult = nil
         attributionCalls = 0
+        deleteShouldFail = false
+        deleteCalls = 0
     }
 
     @_spi(AppstackInternal)
@@ -99,6 +106,13 @@ public final class AppstackAttributionSdk {
 
     public func setCustomerUserId(_ customerUserId: String?) {
         customerUserIdCalls.append(customerUserId)
+    }
+
+    public func deleteUserData() async throws {
+        deleteCalls += 1
+        if deleteShouldFail {
+            throw DeleteError.failed
+        }
     }
 
     public func sendEvent(
