@@ -11,8 +11,8 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- `await AppstackSDK.DeleteUserData()` permanently deletes the current user's
-  Appstack data for GDPR and other privacy deletion requests.
+- `await AppstackSDK.DeleteUserData()` requests permanent deletion of the current
+  user's Appstack data for GDPR and other privacy deletion requests.
 
 ### Changed
 
