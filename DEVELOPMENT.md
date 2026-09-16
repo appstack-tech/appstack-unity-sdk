@@ -92,7 +92,7 @@ injection, and environment variables are intentionally deferred.
 
 Dependency versions are declared in the platform-specific editor integration:
 
-- Android: `tech.appstack.android-sdk:appstack-android-sdk:1.10.0` in
+- Android: `tech.appstack.android-sdk:appstack-android-sdk:1.11.0` in
   `Editor/AppstackDependencies.xml`
 - iOS: `AppstackSDK` Swift package product at `4.7.1` in
   `Editor/AppstackIOSPostProcessBuild.cs`
