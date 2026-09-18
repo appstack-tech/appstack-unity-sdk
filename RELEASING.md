@@ -69,6 +69,73 @@ Inspect the release archive before publishing. Adding it as a local package to a
 clean Unity project must produce the same package contents and behavior as a
 repository checkout.
 
+## Testing a release candidate
+
+A Unity candidate is tested straight from git or from a local tarball. It is not
+published to OpenUPM and it does not get a version tag: OpenUPM stays
+stable-only, and the release workflow's tag filter matches stable `X.Y.Z` only.
+
+1. Put the candidate on a branch and set its version:
+
+   ```bash
+   git checkout -b release/1.7
+   node scripts~/set-version.mjs 1.7.0-rc.1
+   git commit -am "1.7.0-rc.1"
+   git push -u origin release/1.7
+   ```
+
+   `set-version.mjs` accepts a SemVer prerelease, so `package.json` and
+   `Runtime/AppstackVersion.cs` both carry `1.7.0-rc.1`, and the wrapper reports
+   `unity-1.7.0-rc.1`.
+
+2. Point the native pins at the candidate channels when the candidate includes
+   unreleased native changes:
+
+   - Android — in `Editor/AppstackDependencies.xml`, pin
+     `tech.appstack.android-sdk:appstack-android-sdk:<X.Y.Z-SNAPSHOT>` and add
+     `https://central.sonatype.com/repository/maven-snapshots/` to that
+     dependency's `<repositories>`. See the Android SDK's `RELEASING.md`.
+   - iOS — `Editor/AppstackIOSPostProcessBuild.cs` references the native package
+     at an exact version. Testing an unreleased iOS candidate therefore means
+     referencing the native SDK's `rc` channel (branch or revision) instead of a
+     version. See the iOS SDK's `RELEASING.md`.
+
+3. Consume it in a Unity project. Use a Git URL with a branch or commit:
+
+   ```text
+   https://github.com/appstack-tech/appstack-unity-sdk.git#release/1.7
+   https://github.com/appstack-tech/appstack-unity-sdk.git#<commit-sha>
+   ```
+
+   or build a local tarball and reference it:
+
+   ```bash
+   npm pack   # -> com.appstack.unity-sdk-1.7.0-rc.1.tgz
+   ```
+
+   ```json
+   "com.appstack.unity-sdk": "file:/path/to/com.appstack.unity-sdk-1.7.0-rc.1.tgz"
+   ```
+
+   A Git URL records the resolved commit in the project's lock file and is the
+   reproducible form; pin a commit SHA rather than a moving branch when it
+   matters.
+
+4. Do not tag a candidate and do not run the publish step. Before releasing,
+   restore both native pins to released versions before re-vendoring and
+   tagging:
+
+   - Android — set `Editor/AppstackDependencies.xml` back to the released
+     `tech.appstack.android-sdk:appstack-android-sdk:X.Y.Z` and drop the
+     snapshot repository.
+   - iOS — set `PackageVersion` in `Editor/AppstackIOSPostProcessBuild.cs` back
+     to the released version.
+   - Set the package version to the stable value with
+     `node scripts~/set-version.mjs X.Y.Z`, then update the validation fixtures
+     and public docs (see [Before tagging](#before-tagging)) and commit. The
+     release workflow rejects a `-SNAPSHOT` coordinate, and a stable tag must
+     match `package.json`.
+
 ## Publish
 
 1. Commit the generated version files and changelog changes.
