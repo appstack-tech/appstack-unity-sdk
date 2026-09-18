@@ -102,7 +102,7 @@ stable-only, and the release workflow's tag filter matches stable `X.Y.Z` only.
 
 3. Consume it in a Unity project. Use a Git URL with a branch or commit:
 
-   ```
+   ```text
    https://github.com/appstack-tech/appstack-unity-sdk.git#release/1.7
    https://github.com/appstack-tech/appstack-unity-sdk.git#<commit-sha>
    ```
@@ -121,9 +121,20 @@ stable-only, and the release workflow's tag filter matches stable `X.Y.Z` only.
    reproducible form; pin a commit SHA rather than a moving branch when it
    matters.
 
-4. Do not tag a candidate and do not run the publish step. Before releasing, run
-   `node scripts~/set-version.mjs <stable>`, drop the `-SNAPSHOT` native pins, and
-   re-vendor in the same commit.
+4. Do not tag a candidate and do not run the publish step. Before releasing,
+   restore both native pins to released versions before re-vendoring and
+   tagging:
+
+   - Android — set `Editor/AppstackDependencies.xml` back to the released
+     `tech.appstack.android-sdk:appstack-android-sdk:X.Y.Z` and drop the
+     snapshot repository.
+   - iOS — set `PackageVersion` in `Editor/AppstackIOSPostProcessBuild.cs` back
+     to the released version.
+   - Set the package version to the stable value with
+     `node scripts~/set-version.mjs X.Y.Z`, then update the validation fixtures
+     and public docs (see [Before tagging](#before-tagging)) and commit. The
+     release workflow rejects a `-SNAPSHOT` coordinate, and a stable tag must
+     match `package.json`.
 
 ## Publish
 
