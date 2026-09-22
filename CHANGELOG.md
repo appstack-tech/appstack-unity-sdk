@@ -7,6 +7,16 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.6.1] - 2026-09-22
+
+### Changed
+
+- Pinned the Appstack iOS SDK to `4.7.2`. No C# API change is required.
+
+### Fixed
+
+- iOS: the automatic Apple Ads attribution event is sent only once after confirmed delivery. A failed send can be retried on a later `enableAppleAdsAttribution()` call with the same event ID.
+
 ## [1.6.0] - 2026-09-16
 
 ### Changed

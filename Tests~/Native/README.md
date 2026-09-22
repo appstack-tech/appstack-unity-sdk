@@ -27,7 +27,7 @@ The Android 35 SDK, JDK 17, Google Maven, and Maven Central must be available.
 
 The iOS runner copies the production Swift bridge into a temporary Swift package.
 It first runs deterministic XCTest cases against a recording `AppstackSDK` module,
-then resolves the exact `4.7.1` XCFramework, compiles the production bridge for an
+then resolves the exact `4.7.2` XCFramework, compiles the production bridge for an
 iOS 15 simulator target, and checks every expected C ABI symbol with `nm`.
 
 ```sh
