@@ -7,7 +7,7 @@ from Unity applications.
 
 1. [Install the package and configure the SDK](../README.md).
 2. Complete the setup for [iOS](iOS.md) and [Android](Android.md).
-3. Follow the [usage guide](../USAGE.md) for events and attribution data.
+3. Follow the [official documentation](https://docs.appstack.tech/SDKs/unity) for events and attribution data.
 
 For zero-code startup, create project-wide settings under **Edit → Project
 Settings → Appstack**. Projects that need consent or custom startup ordering can

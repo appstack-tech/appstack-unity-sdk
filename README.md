@@ -1,240 +1,88 @@
-# Appstack Unity SDK
+<p align="center">
+  <a href="https://www.appstack.tech">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/appstack-tech/appstack-unity-sdk/main/.github/assets/appstack_logo_white_wordmark.png">
+      <img alt="Appstack" src="https://raw.githubusercontent.com/appstack-tech/appstack-unity-sdk/main/.github/assets/appstack_logo_black_wordmark.png" width="280">
+    </picture>
+  </a>
+</p>
 
-Track events and revenue, enable Apple Ads attribution on iOS, and retrieve
-attribution data from Unity applications.
+<p align="center">
+  Mobile attribution and ad-network optimization for Unity games and apps.
+</p>
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+<p align="center">
+  <a href="https://openupm.com/packages/com.appstack.unity-sdk/"><img alt="OpenUPM" src="https://img.shields.io/npm/v/com.appstack.unity-sdk?label=openupm&registry_uri=https://package.openupm.com"></a>
+  <img alt="Unity" src="https://img.shields.io/badge/Unity-6000.0%2B-black.svg">
+  <img alt="Platforms" src="https://img.shields.io/badge/platforms-iOS%2015%2B%20%7C%20Android%205.0%2B-blue.svg">
+  <a href="https://github.com/appstack-tech/appstack-unity-sdk/blob/main/LICENSE.md"><img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey.svg"></a>
+</p>
 
-## Requirements
+<p align="center">
+  <a href="https://docs.appstack.tech/SDKs/unity"><b>Documentation</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://docs.appstack.tech/reference/unity">API reference</a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/appstack-tech/appstack-unity-sdk/blob/main/CHANGELOG.md">Changelog</a>
+  &nbsp;·&nbsp;
+  <a href="https://www.appstack.tech/contact">Support</a>
+</p>
 
-- Unity 6 (`6000.0`) or newer
-- iOS 15.0 or newer
-- Android API level 21 or newer, target API level 34+, and Java 17+
-- For Android builds, either External Dependency Manager for Unity (EDM4U) or
-  the documented manual Gradle dependency configuration
+---
+
+The Appstack Unity SDK tracks installs and in-app events, attributes them to your ad campaigns, and sends conversions back to Meta, Google, TikTok, Apple Ads and other networks. It wraps the native Appstack iOS and Android SDKs.
 
 ## Installation
 
-### OpenUPM
+Install `com.appstack.unity-sdk` from [OpenUPM](https://openupm.com/packages/com.appstack.unity-sdk/):
 
-1. Add `https://package.openupm.com` as a scoped registry for `com.appstack`.
-2. In Unity, open **Window → Package Manager**.
-3. Select **+ → Add package by name** and enter `com.appstack.unity-sdk`.
-
-See the [OpenUPM getting-started guide](https://openupm.com/docs/getting-started.html)
-for scoped-registry instructions.
-
-### Local package
-
-Clone this repository, then select **Window → Package Manager → + → Add package
-from disk** and choose the repository's root `package.json`.
-
-You can also add a local dependency to your project's `Packages/manifest.json`:
-
-```json
-{
-  "dependencies": {
-    "com.appstack.unity-sdk": "file:../appstack-unity-sdk"
-  }
-}
+```sh
+openupm add com.appstack.unity-sdk
 ```
 
-## Platform setup
-
-iOS dependency setup is automatic. Before building for Android, the Appstack
-native Android SDK must be added to the generated Gradle project. Install EDM4U
-for automatic resolution (recommended), or follow the manual Gradle setup. The
-Appstack Unity package does not install EDM4U automatically.
-
-- [iOS setup](Documentation~/iOS.md)
-- [Android setup](Documentation~/Android.md)
+Or add `https://package.openupm.com` as a scoped registry for `com.appstack` and install the package from **Window ▸ Package Manager**. Android builds also need [EDM4U](https://github.com/googlesamples/unity-jar-resolver) or the manual Gradle setup described in the [documentation](https://docs.appstack.tech/SDKs/unity).
 
 ## Quick start
 
-### Automatic initialization
+Open **Edit ▸ Project Settings ▸ Appstack**, select **Create Appstack Settings** and enter your API keys. The SDK then initializes automatically before the first scene.
 
-Open **Edit → Project Settings → Appstack**, select **Create Appstack
-Settings**, and enter the development and production API keys for each platform
-you ship. Appstack initializes before the first scene without requiring a
-GameObject or startup script.
-
-By default, Unity Development Builds use the development key and other builds
-use the production key. The environment can instead be pinned to Development or
-Production. **Allow Production Fallback** lets a development build use its
-production key when no development key is configured; this is explicit and
-disabled by default. Production builds never fall back to a development key.
-
-iOS and Android can be enabled independently. A build is blocked only when
-auto-initialization and its current target platform are enabled but no key can
-be resolved for that build. Missing keys for another platform do not affect the
-build.
-
-Creating settings opts the project into auto-initialization. Installing the
-package alone creates no settings and changes no runtime behavior.
-
-### Manual initialization
-
-For consent flows, custom bootstrap ordering, or remotely supplied
-configuration, leave the settings asset absent or turn off **Auto Initialize**.
-Call `Configure` once during application startup and before using other SDK
-methods:
+To initialize it yourself instead (for example after a consent prompt):
 
 ```csharp
 using System.Collections.Generic;
 using Appstack;
-using UnityEngine;
 
-public sealed class AppstackInitializer : MonoBehaviour
-{
-    [SerializeField] private string iosApiKey;
-    [SerializeField] private string androidApiKey;
-
-    private void Start()
-    {
-#if UNITY_IOS && !UNITY_EDITOR
-        string apiKey = iosApiKey;
-#elif UNITY_ANDROID && !UNITY_EDITOR
-        string apiKey = androidApiKey;
-#else
-        string apiKey = "your-api-key";
-#endif
-
-        AppstackSDK.Configure(apiKey);
-
-#if UNITY_IOS && !UNITY_EDITOR
-        AppstackSDK.EnableAppleAdsAttribution();
-#endif
-
-        AppstackSDK.SendEvent(
-            EventType.PURCHASE,
-            parameters: new Dictionary<string, object>
-            {
-                { "revenue", 29.99 },
-                { "currency", "USD" }
-            });
-    }
-}
-```
-
-The first successful automatic or manual configuration wins. Repeating the
-same configuration is a silent no-op; a conflicting repeat is ignored with a
-warning that does not expose either API key. Failed configuration attempts may
-be retried.
-
-The password fields mask API keys visually only. Keys remain plaintext in the
-settings asset and version control. Because Unity includes the entire Resources
-asset, every configured key—including development keys and keys for the other
-mobile platform—may be present in production player builds. Treat them as
-application ingestion credentials, not administrative secrets.
-
-## Public API
-
-### Universal Links and Android App Links
-
-Forward `Application.absoluteURL` at cold start and
-`Application.deepLinkActivated` events to
-`AppstackSDK.HandleUniversalLink(url, allowedHosts)`. Only branded-domain
-standard links with one path segment are supported. See [USAGE.md](USAGE.md#universal-links-and-android-app-links)
-for the full example and platform configuration.
-
-### Configure
-
-```csharp
-AppstackSDK.Configure(
-    apiKey: "your-platform-api-key",
-    logLevel: 1,
-    customerUserId: "optional-user-id"
-);
-```
-
-`logLevel` accepts `0=DEBUG`, `1=INFO`, `2=WARN`, and `3=ERROR`. iOS has no
-dedicated warning level, so `WARN` behaves like `ERROR` there.
-
-### Set or clear the customer user ID
-
-The customer user ID is your own identifier for the signed-in user. Appstack
-attaches it to events so server-to-server events — which identify the user by
-this ID rather than by the install — can be joined back to the install that
-produced them.
-
-Pass it to `Configure` when you already know it at startup. More often a login
-reveals it afterwards, so set it whenever it becomes known:
-
-```csharp
-AppstackSDK.SetCustomerUserId("user-123"); // on login
-AppstackSDK.ClearCustomerUserId();         // on logout
-```
-
-`SetCustomerUserId(null)` and an empty or whitespace ID also clear it, so
-`ClearCustomerUserId()` is only a more explicit spelling of the same call. Note
-this differs from `Configure`, where an empty `customerUserId` means "not
-provided": `Configure` never clears.
-
-Callable at any time, before or after `Configure`, as often as you like — the
-last call wins. It applies to every event sent from here on, including ones the
-native SDK has buffered but not yet flushed, and does not send anything by
-itself: make sure at least one event follows, or no mapping is ever formed.
-Calling `Configure` again to change the ID does not work — a repeat `Configure`
-is a no-op and its `customerUserId` is ignored.
-
-### Delete user data
-
-For GDPR or another privacy deletion request, permanently delete the current
-user's Appstack data and wait for the native request to finish:
-
-```csharp
-await AppstackSDK.DeleteUserData();
-```
-
-The returned task completes on success and faults if the native SDK cannot
-complete the request. This is different from `ClearCustomerUserId()`, which
-only removes the customer user ID stored on the device.
-
-### Send standard and custom events
-
-```csharp
-AppstackSDK.SendEvent(EventType.LOGIN);
+// For example in a MonoBehaviour's Start()
+AppstackSDK.Configure("your_api_key");
 
 AppstackSDK.SendEvent(
-    EventType.CUSTOM,
-    eventName: "level_completed",
-    parameters: new Dictionary<string, object> { { "level", 12 } }
-);
+    EventType.PURCHASE,
+    parameters: new Dictionary<string, object> { { "revenue", 29.99 }, { "currency", "USD" } });
 ```
 
-An `eventName` is required for `CUSTOM` events and ignored for standard events.
-Event parameters may contain strings, Booleans, finite numeric values, nulls,
-nested string-keyed dictionaries, and arrays. Unsupported objects and non-finite
-numbers such as `NaN` or infinity are rejected before reaching the native SDK.
+Setup, event types, Apple Ads attribution, integrations (RevenueCat, Superwall) and troubleshooting are covered in the **[official documentation](https://docs.appstack.tech/SDKs/unity)**.
 
-### Retrieve the Appstack ID and attribution parameters
+## Documentation
 
-```csharp
-string appstackId = AppstackSDK.GetAppstackId();
+- **[Unity SDK guide](https://docs.appstack.tech/SDKs/unity)**: installation, configuration and event tracking
+- **[API reference](https://docs.appstack.tech/reference/unity)**: every public method and type
+- **[Apple Ads](https://docs.appstack.tech/Integrations/apple-ads)**: Apple Ads attribution setup
+- **[RevenueCat](https://docs.appstack.tech/Integrations/revenuecat)** and **[Superwall](https://docs.appstack.tech/Integrations/superwall)**: subscription platform integrations
+- **[iOS setup](Documentation~/iOS.md)** and **[Android setup](Documentation~/Android.md)**: platform notes shipped with the package
+- **[Changelog](https://github.com/appstack-tech/appstack-unity-sdk/blob/main/CHANGELOG.md)**: release notes for every version
 
-AppstackSDK.GetAttributionParams(
-    onSuccess: parameters => Debug.Log($"Attribution: {parameters.Count} values"),
-    onError: error => Debug.LogError($"Attribution error: {error}")
-);
-```
+## Sample and contributing
 
-### Check SDK status
+Import the **Basic Integration** sample from the Unity Package Manager. For package architecture and contribution guidance see [DEVELOPMENT.md](DEVELOPMENT.md); release maintainers should use [RELEASING.md](RELEASING.md).
 
-```csharp
-bool disabled = AppstackSDK.IsSdkDisabled();
-```
+## Other platforms
 
-## More documentation
+[iOS](https://docs.appstack.tech/SDKs/swift) · [Android](https://docs.appstack.tech/SDKs/kotlin) · [React Native](https://docs.appstack.tech/SDKs/react-native) · [Flutter](https://docs.appstack.tech/SDKs/flutter)
 
-- [Usage guide](USAGE.md)
-- [iOS setup](Documentation~/iOS.md)
-- [Android setup](Documentation~/Android.md)
-- Import the **Basic Integration** sample from the Unity Package Manager
+## Support
 
-For package architecture and contribution guidance, see
-[DEVELOPMENT.md](DEVELOPMENT.md). Release maintainers should use
-[RELEASING.md](RELEASING.md).
+Questions or issues? [Open an issue](https://github.com/appstack-tech/appstack-unity-sdk/issues) or [contact us](https://www.appstack.tech/contact).
 
 ## License
 
-MIT — see [LICENSE.md](LICENSE.md).
+Released under the [MIT License](https://github.com/appstack-tech/appstack-unity-sdk/blob/main/LICENSE.md).
