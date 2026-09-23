@@ -47,7 +47,6 @@ jobs:
             README.md README.md.meta
             CHANGELOG.md CHANGELOG.md.meta
             LICENSE.md LICENSE.md.meta
-            USAGE.md USAGE.md.meta
             Runtime Runtime.meta
             Editor Editor.meta
             Tests Tests.meta
