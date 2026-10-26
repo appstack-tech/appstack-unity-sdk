@@ -1,5 +1,14 @@
 #!/usr/bin/env node
 
+// Keeps every copy of the package version in agreement: package.json,
+// Runtime/AppstackVersion.cs and, for a stable version, the latest CHANGELOG.md
+// section ("## [X.Y.Z] - YYYY-MM-DD"), which release.yml reads as the version to
+// publish.
+//
+//   node scripts~/set-version.mjs 1.7.0        set the version and cut the changelog section
+//   node scripts~/set-version.mjs 1.7.0-rc.1   set a candidate version (changelog untouched)
+//   node scripts~/set-version.mjs --check [1.7.0]
+
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -8,6 +17,9 @@ import { fileURLToPath } from 'node:url';
 const rootPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const manifestPath = path.join(rootPath, 'package.json');
 const versionSourcePath = path.join(rootPath, 'Runtime', 'AppstackVersion.cs');
+const changelogPath = path.join(rootPath, 'CHANGELOG.md');
+const stablePattern = /^\d+\.\d+\.\d+$/;
+const releasedHeaderPattern = /^## \[([^\]]+)\] - \d{4}-\d{2}-\d{2}$/;
 const semverPattern =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
 
@@ -45,6 +57,35 @@ function readManifest() {
   }
 }
 
+// First "## [" heading that isn't [Unreleased].
+function latestChangelogHeader(lines) {
+  return lines.find((line) => line.startsWith('## [') && line !== '## [Unreleased]') ?? '';
+}
+
+// Returns CHANGELOG.md with a new section cut from Unreleased, or null when the
+// section already exists.
+function cutChangelog(version) {
+  const lines = fs.readFileSync(changelogPath, 'utf8').split('\n');
+  const unreleased = lines.indexOf('## [Unreleased]');
+  if (unreleased === -1) {
+    fail('CHANGELOG.md has no "## [Unreleased]" heading.');
+  }
+
+  if (latestChangelogHeader(lines).startsWith(`## [${version}]`)) {
+    console.log(`CHANGELOG.md already has a ${version} section; leaving it.`);
+    return null;
+  }
+
+  const next = lines.findIndex((line, i) => i > unreleased && line.trim() !== '');
+  if (next === -1 || lines[next].startsWith('## [')) {
+    fail('nothing under "## [Unreleased]" to release. Add the changes to CHANGELOG.md first.');
+  }
+
+  const date = new Date().toISOString().slice(0, 10);
+  lines.splice(unreleased + 1, 0, '', `## [${version}] - ${date}`);
+  return lines.join('\n');
+}
+
 const args = process.argv.slice(2);
 if (args[0] === '--check') {
   if (args.length > 2) {
@@ -74,6 +115,20 @@ if (args[0] === '--check') {
     );
   }
 
+  // A candidate version is never released from main, so only a stable one must
+  // match the changelog.
+  if (stablePattern.test(manifest.version)) {
+    const header = latestChangelogHeader(fs.readFileSync(changelogPath, 'utf8').split('\n'));
+    const match = header.match(releasedHeaderPattern);
+    if (!match || match[1] !== manifest.version) {
+      fail(
+        `the latest CHANGELOG.md section is "${header}", expected ` +
+          `"## [${manifest.version}] - YYYY-MM-DD". Run ` +
+          `"node scripts~/set-version.mjs ${manifest.version}" and commit the result.`,
+      );
+    }
+  }
+
   console.log(
     `Version contract is valid: ${manifest.version} / unity-${manifest.version}`,
   );
@@ -89,7 +144,12 @@ validateVersion(version, 'version');
 
 const manifest = readManifest();
 manifest.version = version;
+// Cut the changelog before writing anything, so a failure leaves every file as it was.
+const changelog = stablePattern.test(version) ? cutChangelog(version) : null;
 fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 fs.writeFileSync(versionSourcePath, versionSource(version));
+if (changelog !== null) {
+  fs.writeFileSync(changelogPath, changelog);
+}
 
 console.log(`Updated package.json and wrapper telemetry to ${version}.`);
