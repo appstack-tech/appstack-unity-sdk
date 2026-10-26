@@ -35,8 +35,8 @@ The GitHub Actions workflow packages the root-level UPM contents. It:
   OpenUPM reports a build failure.
 
 Signing requires the `UPM_SERVICE_ACCOUNT_KEY_ID`, `UPM_SERVICE_ACCOUNT_KEY_SECRET`,
-and `UPM_ORG_ID` repository secrets. The job fails before packing when any of
-them is missing.
+and `UPM_ORG_ID` secrets of the `release` environment, which only `main` can
+deploy to. The job fails before packing when any of them is missing.
 
 ## Branches and how a release happens
 
