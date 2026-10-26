@@ -1,81 +1,81 @@
 # Publish Appstack Unity SDK: GitHub Release + signed OpenUPM package.
-# Trigger: push a semantic version tag such as 1.0.0.
+#
+# A stable release is a merge to main whose CHANGELOG.md has a new dated
+# "## [X.Y.Z] - YYYY-MM-DD" section (see .github/scripts/resolve-release-version.sh).
+# Merges that don't add one publish nothing. Day-to-day work lands on develop;
+# the reviewed develop -> main PR is the release approval. This workflow creates
+# the X.Y.Z tag itself. OpenUPM builds every version from its git tag, so no
+# one should push version tags by hand (see RELEASING.md).
+#
+# Release candidates are not published: they are consumed from a develop commit.
 
 name: Release
 
 on:
   push:
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
+    branches: [main]
 
 permissions:
-  contents: write
-  id-token: write
+  contents: read
 
 jobs:
+  # Decides what this run publishes, before any build or check.
+  resolve:
+    name: Resolve version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      release: ${{ steps.meta.outputs.release }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Tags are needed to tell a new version from one already released.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Resolve release version
+        id: meta
+        run: .github/scripts/resolve-release-version.sh CHANGELOG.md
+
+      # Fail here, not after the checks, when package.json or
+      # Runtime/AppstackVersion.cs disagree with the changelog.
+      - name: Check version copies agree
+        if: ${{ steps.meta.outputs.release == 'true' }}
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: node scripts~/set-version.mjs --check "$VERSION"
+
+  # The same checks every PR ran.
+  ci:
+    name: CI
+    needs: resolve
+    if: ${{ needs.resolve.outputs.release == 'true' }}
+    uses: ./.github/workflows/ci.yml
+
   release:
     name: Create release, package, and publish
     runs-on: ubuntu-latest
+    needs: [resolve, ci]
+    # Never run two publishes at once, and never cancel one in flight.
+    concurrency:
+      group: release-unity
+      cancel-in-progress: false
+    permissions:
+      contents: write   # create the tag and GitHub Release
+      id-token: write   # OpenUPM's OIDC-authenticated refresh
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
+          persist-credentials: false
 
-      - name: Read tag version
-        id: version
-        run: |
-          VERSION="${GITHUB_REF#refs/tags/}"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Verify package and wrapper versions
-        env:
-          TAG_VERSION: ${{ steps.version.outputs.version }}
-        run: node scripts~/set-version.mjs --check "$TAG_VERSION"
-
-      - name: Test release notes extraction
-        run: node --test scripts~/release-notes.test.mjs
-
+      # Without --candidate this also rejects -SNAPSHOT coordinates and
+      # non-release native pins.
       - name: Create root UPM package archive
         env:
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          PACKAGE_NAME="appstack-unity-sdk-${VERSION}"
-          PACKAGE_ROOT="dist/${PACKAGE_NAME}"
-          PACKAGE_ENTRIES=(
-            package.json package.json.meta
-            README.md README.md.meta
-            CHANGELOG.md CHANGELOG.md.meta
-            LICENSE.md LICENSE.md.meta
-            Runtime Runtime.meta
-            Editor Editor.meta
-            Tests Tests.meta
-            "Samples~" "Documentation~"
-          )
-
-          mkdir -p "$PACKAGE_ROOT"
-          for entry in "${PACKAGE_ENTRIES[@]}"; do
-            if [[ ! -e "$entry" ]]; then
-              echo "::error::Required package entry is missing: $entry"
-              exit 1
-            fi
-            cp -R "$entry" "$PACKAGE_ROOT/"
-          done
-
-          # A -SNAPSHOT coordinate is mutable and expires, so a release must never
-          # ship one: the published package would change under integrators, or stop
-          # resolving altogether. Developing against a release candidate is fine —
-          # the pin just has to be a plain release version by the time a tag is cut.
-          # Scanning the assembled package covers the dependency declaration and any
-          # setup documentation that names it, without a path list to keep in sync.
-          if grep -rn -- '-SNAPSHOT' "$PACKAGE_ROOT"; then
-            echo "::error::The package would ship a -SNAPSHOT native dependency (see matches above). Move the pin to a released version before tagging."
-            exit 1
-          fi
-
-          (cd dist && zip -q -r "../${PACKAGE_NAME}.zip" "$PACKAGE_NAME")
-          echo "package_name=${PACKAGE_NAME}.zip" >> "$GITHUB_ENV"
-          echo "package_root=${PACKAGE_ROOT}" >> "$GITHUB_ENV"
+          VERSION: ${{ needs.resolve.outputs.version }}
+        run: bash scripts~/assemble-package.sh "$VERSION" >> "$GITHUB_ENV"
 
       - name: Install pinned Unity UPM CLI
         env:
@@ -100,7 +100,7 @@ jobs:
           UPM_SERVICE_ACCOUNT_KEY_ID: ${{ secrets.UPM_SERVICE_ACCOUNT_KEY_ID }}
           UPM_SERVICE_ACCOUNT_KEY_SECRET: ${{ secrets.UPM_SERVICE_ACCOUNT_KEY_SECRET }}
           UPM_ORG_ID: ${{ secrets.UPM_ORG_ID }}
-          EXPECTED_VERSION: ${{ github.ref_name }}
+          EXPECTED_VERSION: ${{ needs.resolve.outputs.version }}
         run: |
           missing=()
           [[ -z "$UPM_SERVICE_ACCOUNT_KEY_ID" ]] && missing+=(UPM_SERVICE_ACCOUNT_KEY_ID)
@@ -135,13 +135,11 @@ jobs:
 
           echo "signed_package=${signed_package}" >> "$GITHUB_ENV"
 
-      # The release notes lead with the tagged CHANGELOG.md section, so the
-      # release page stands on its own instead of pointing readers elsewhere.
-      # A missing section fails the release rather than publishing install
-      # steps with no notes.
+      # The release notes lead with the CHANGELOG.md section, so the release
+      # page stands on its own instead of pointing readers elsewhere.
       - name: Compose release notes
         env:
-          VERSION: ${{ steps.version.outputs.version }}
+          VERSION: ${{ needs.resolve.outputs.version }}
           REPOSITORY: ${{ github.repository }}
         run: |
           notes="$RUNNER_TEMP/release-notes.md"
@@ -149,22 +147,32 @@ jobs:
           cat "$notes"
           echo "release_notes=${notes}" >> "$GITHUB_ENV"
 
+      # --target creates the X.Y.Z tag on the merge commit just checked. Tags
+      # created with GITHUB_TOKEN don't trigger workflows, so this can't start
+      # another run. Re-runs after a later failure skip straight to OpenUPM.
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: ${{ steps.version.outputs.version }}
-          body_path: ${{ env.release_notes }}
-          files: |
-            ${{ env.package_name }}
-            ${{ env.signed_package }}
-          draft: false
-          generate_release_notes: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.resolve.outputs.version }}
+          TARGET_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "Release $VERSION already exists — skipping."
+            exit 0
+          fi
+          gh release create "$VERSION" \
+            "$package_name" "$signed_package" \
+            --title "$VERSION" \
+            --notes-file "$release_notes" \
+            --generate-notes \
+            --target "$TARGET_SHA" \
+            --latest
 
       - name: Publish to OpenUPM
-        uses: openupm/openupm-action@v1
+        uses: openupm/openupm-action@89b79dc8dd6cb319efff06727f8fa0051ce7e517 # v1
         with:
           package: com.appstack.unity-sdk
-          tag: ${{ github.ref_name }}
+          tag: ${{ needs.resolve.outputs.version }}
           timeout-minutes: 30

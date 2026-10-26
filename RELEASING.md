@@ -7,25 +7,30 @@ This document is for release maintainers. Integrators should use
 
 The GitHub Actions workflow packages the root-level UPM contents. It:
 
-- Reads the version from the root `package.json`.
-- Fails when the Git tag and package version differ.
+- Runs on every push to `main`, and publishes only when the latest
+  `CHANGELOG.md` section (`## [X.Y.Z] - YYYY-MM-DD`) names a version with no
+  tag yet, newer than the latest release.
+- Fails when `package.json` or `Runtime/AppstackVersion.cs` disagree with that
+  version (`node scripts~/set-version.mjs --check X.Y.Z`).
+- Runs the full CI workflow (`ci.yml`) on the merge commit before publishing.
 - Packages the root UPM contents rather than creating an `Assets/` tree.
 - Includes `LICENSE.md`, public documentation, runtime, editor, tests, samples,
   and all corresponding `.meta` files.
 - Excludes repository-only files and generated output. The workflow allowlist
   controls the GitHub ZIP, while `.npmignore` applies the same boundary to the
   tarball built by OpenUPM.
-- Fails when the assembled package contains a `-SNAPSHOT` coordinate anywhere.
-  A snapshot pin is mutable and expires, so a release must never ship one.
+- Assembles the package with `scripts~/assemble-package.sh`, which fails when
+  the package contains a `-SNAPSHOT` coordinate anywhere or either native pin
+  isn't a released `X.Y.Z` version. A snapshot pin is mutable and expires, so
+  a release must never ship one.
 - Signs the package with `upm pack`, using a pinned, checksum-verified Unity UPM
   CLI, and verifies that the signed archive carries an attestation and the
   expected package name and version.
-- Attaches both artifacts to the GitHub Release: the ZIP for manual installation
-  and the signed `.tgz`.
+- Creates the `X.Y.Z` tag and GitHub Release on the merge commit, with both
+  artifacts attached: the ZIP for manual installation and the signed `.tgz`.
 - Builds the release body with `node scripts~/release-notes.mjs <version>`: the
-  tagged `CHANGELOG.md` section first, then manual installation through Unity
-  Package Manager. The step fails when the changelog has no section for the tag,
-  so a release cannot publish install steps and no notes.
+  version's `CHANGELOG.md` section first, then manual installation through Unity
+  Package Manager.
 - Triggers an OpenUPM scan and waits until the tagged version is installable or
   OpenUPM reports a build failure.
 
@@ -33,22 +38,56 @@ Signing requires the `UPM_SERVICE_ACCOUNT_KEY_ID`, `UPM_SERVICE_ACCOUNT_KEY_SECR
 and `UPM_ORG_ID` repository secrets. The job fails before packing when any of
 them is missing.
 
-## Before tagging
+## Branches and how a release happens
 
-1. Confirm the release uses the intended stable Android and iOS native SDK
-   versions.
-2. Update both native dependency pins, their validation fixtures, and the
-   public platform documentation together. Both pins must name a released
-   version; the workflow rejects a `-SNAPSHOT` coordinate.
-3. Run `node scripts~/set-version.mjs <version>`. This updates the root
-   `package.json` and regenerates `Runtime/AppstackVersion.cs` together.
-4. Run `node scripts~/set-version.mjs --check <version>`. The editor tests and
-   release workflow run equivalent validation; both native bridges receive the
-   resulting `unity-<version>` value from C#.
-5. Move relevant entries from `Unreleased` to a versioned changelog section. The
-   release workflow reads that section as the release body and fails without it.
-   Preview it with `node scripts~/release-notes.mjs <version>`.
-6. Confirm every package asset has a committed, unique `.meta` file.
+- **`develop`** is where work lands. Open PRs against it and squash-merge
+  them. Nothing on `develop` is published.
+- **`main`** only changes through release PRs. Merging one publishes.
+
+CI (`ci.yml`) runs on every PR into either branch: the version and package
+checks, the release-notes tests, and the Android and iOS bridge contracts
+from `Tests~/Native`. The Unity Test Runner editor tests and the player builds
+in `Tests~/Integration` need a Unity license, so they are not in CI; run them
+locally before a release (see [Validation](#validation)).
+
+To cut a stable release:
+
+1. On a branch off `develop`:
+   1. Confirm the release uses the intended stable Android and iOS native SDK
+      versions. Update both native dependency pins, their validation fixtures,
+      and the public platform documentation together. Both pins must name a
+      released version.
+   2. Run `node scripts~/set-version.mjs X.Y.Z`. It updates `package.json`,
+      regenerates `Runtime/AppstackVersion.cs`, and promotes
+      `## [Unreleased]` in `CHANGELOG.md` to `## [X.Y.Z] - <today>`. Preview
+      the release body with `node scripts~/release-notes.mjs X.Y.Z`.
+   3. Confirm every package asset has a committed, unique `.meta` file.
+
+   Merge that into `develop`.
+2. Open a PR from `develop` into `main`. The **Release version** check
+   (`release-pr.yml`) names the version that merging will publish. It fails if
+   the changelog has no new version, if the version copies disagree, or if a
+   native pin is a candidate.
+3. Get it approved by someone other than you, then merge it with **Create a
+   merge commit**. Don't squash: a squash leaves `develop` and `main` with
+   different commits for the same changes, and every later release PR then
+   conflicts.
+4. `release.yml` runs on the push to `main` and publishes (see
+   [Release artifact](#release-artifact)).
+
+A merge to `main` whose changelog has no new version publishes nothing. Such a
+PR needs the `no-release` label to pass the Release version check.
+
+**Never push a version tag by hand.** OpenUPM tracks this repository in Git
+mode and builds a version from any matching tag it finds, whether or not a
+workflow ran. Tags are created only by `release.yml`.
+
+### Hotfixes
+
+Branch `hotfix/<name>` off `main`, run `node scripts~/set-version.mjs X.Y.Z`
+for the patch version, and open the PR into `main` (merge commit, as above).
+After it publishes, open a PR from `main` into `develop` and squash it, so the
+fix is on `develop` too.
 
 ## Validation
 
@@ -73,15 +112,14 @@ repository checkout.
 
 A Unity candidate is tested straight from git or from a local tarball. It is not
 published to OpenUPM and it does not get a version tag: OpenUPM stays
-stable-only, and the release workflow's tag filter matches stable `X.Y.Z` only.
+stable-only, and the release workflow only publishes stable `X.Y.Z` versions
+from `main`.
 
-1. Put the candidate on a branch and set its version:
+1. On a branch off `develop`, set the candidate version and merge it into
+   `develop`:
 
    ```bash
-   git checkout -b release/1.7
    node scripts~/set-version.mjs 1.7.0-rc.1
-   git commit -am "1.7.0-rc.1"
-   git push -u origin release/1.7
    ```
 
    `set-version.mjs` accepts a SemVer prerelease, so `package.json` and
@@ -103,7 +141,7 @@ stable-only, and the release workflow's tag filter matches stable `X.Y.Z` only.
 3. Consume it in a Unity project. Use a Git URL with a branch or commit:
 
    ```text
-   https://github.com/appstack-tech/appstack-unity-sdk.git#release/1.7
+   https://github.com/appstack-tech/appstack-unity-sdk.git#develop
    https://github.com/appstack-tech/appstack-unity-sdk.git#<commit-sha>
    ```
 
@@ -121,9 +159,8 @@ stable-only, and the release workflow's tag filter matches stable `X.Y.Z` only.
    reproducible form; pin a commit SHA rather than a moving branch when it
    matters.
 
-4. Do not tag a candidate and do not run the publish step. Before releasing,
-   restore both native pins to released versions before re-vendoring and
-   tagging:
+4. Do not tag a candidate. Before the release PR, restore both native pins to
+   released versions:
 
    - Android — set `Editor/AppstackDependencies.xml` back to the released
      `tech.appstack.android-sdk:appstack-android-sdk:X.Y.Z` and drop the
@@ -132,22 +169,17 @@ stable-only, and the release workflow's tag filter matches stable `X.Y.Z` only.
      to the released version.
    - Set the package version to the stable value with
      `node scripts~/set-version.mjs X.Y.Z`, then update the validation fixtures
-     and public docs (see [Before tagging](#before-tagging)) and commit. The
-     release workflow rejects a `-SNAPSHOT` coordinate, and a stable tag must
-     match `package.json`.
+     and public docs (see step 1 of the release above) and commit. The Release
+     version check rejects a candidate pin or a `-SNAPSHOT` coordinate.
 
-## Publish
+## After a release
 
-1. Commit the generated version files and changelog changes.
-2. Create a semantic version tag matching `package.json`, for example `1.0.0`.
-3. Push the commit and tag.
-4. Confirm the GitHub Actions release job succeeds. The job creates the GitHub
-   Release, triggers OpenUPM, and waits for the registry version to become
-   installable.
-5. Confirm the release archive passes a clean-project import check and the
+1. Confirm the Release workflow succeeds. It creates the GitHub Release,
+   triggers OpenUPM, and waits for the registry version to become installable.
+2. Confirm the release archive passes a clean-project import check and the
    GitHub release notes carry the version's changelog section above the install
    instructions.
-6. Confirm OpenUPM reports the published version as signed. The publish step
+3. Confirm OpenUPM reports the published version as signed. The publish step
    exposes a `signed` output but does not assert it, so an unsigned publish
    still leaves the job green.
 
@@ -161,7 +193,3 @@ required.
 authoritative metadata from the `openupm/openupm` repository. Update listing
 details such as topics, image, repository URL, tag filters, or tracking mode by
 opening a pull request against that repository.
-
-The release workflow intentionally accepts bare stable tags such as `1.0.1`.
-Supporting a prerelease requires updating both `package.json` and the workflow
-tag filter so the parsed tag version remains an exact match.

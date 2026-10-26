@@ -97,3 +97,7 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Package assembly output (scripts~/assemble-package.sh)
+/dist/
+/appstack-unity-sdk-*.zip

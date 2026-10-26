@@ -1,0 +1,127 @@
+name: CI
+
+# Runs on every PR and on every push to develop, and is called by release.yml so
+# a release runs exactly the checks every PR ran. Make "CI result" the required
+# check on main and develop: it always reports under the same name.
+#
+# Not covered here: the Unity Test Runner editor tests and the player builds in
+# Tests~/Integration, which need a Unity editor license on the runner. Run them
+# locally before a release (see RELEASING.md).
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [develop]
+  workflow_call:
+
+permissions:
+  contents: read
+
+# A new commit on a PR cancels its stale run. Release runs (workflow_call) and
+# pushes are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  package:
+    name: Package and version checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      # package.json and Runtime/AppstackVersion.cs agree, and a stable version
+      # has its changelog section.
+      - name: Check version copies agree
+        run: node scripts~/set-version.mjs --check
+
+      - name: Test release notes extraction
+        run: node --test scripts~/release-notes.test.mjs
+
+      # Assembles the same package the release ships. --candidate allows native
+      # release-candidate pins, which develop may carry; release-pr.yml and
+      # release.yml enforce released pins.
+      - name: Assemble package
+        run: bash scripts~/assemble-package.sh "$(node -p "require('./package.json').version")" --candidate
+
+  android-bridge:
+    name: Android bridge contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # The fixture has no wrapper of its own; Tests~/Native/README.md names 8.13.
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          gradle-version: '8.13'
+
+      - name: Run Android contract tests
+        env:
+          GRADLEW: gradle
+        run: bash Tests~/Native/Android/run-tests.sh
+
+  ios-bridge:
+    name: iOS bridge contract
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The runner reads Package.swift at the pinned tag, so it needs the tags
+      # but none of the distribution repo's committed binaries.
+      - name: Checkout iOS distribution repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: appstack-tech/ios-appstack-sdk
+          path: ios-appstack-sdk
+          fetch-depth: 0
+          filter: blob:none
+          sparse-checkout: Package.swift
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+        with:
+          xcode-version: 16.4
+
+      - name: Run iOS contract tests
+        env:
+          APPSTACK_IOS_DISTRIBUTION_REPO: ${{ github.workspace }}/ios-appstack-sdk
+        run: bash Tests~/Native/iOS/run-tests.sh
+
+  result:
+    name: CI result
+    needs: [package, android-bridge, ios-bridge]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check job results
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          for result in $RESULTS; do
+            if [[ "$result" != "success" ]]; then
+              echo "::error::A CI job did not succeed (results: $RESULTS)."
+              exit 1
+            fi
+          done
