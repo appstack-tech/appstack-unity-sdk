@@ -61,6 +61,9 @@ jobs:
     concurrency:
       group: release-unity
       cancel-in-progress: false
+    # The UPM signing secrets live in this environment, which only main can
+    # deploy to, so a workflow run from any other branch can't read them.
+    environment: release
     permissions:
       contents: write   # create the tag and GitHub Release
       id-token: write   # OpenUPM's OIDC-authenticated refresh
