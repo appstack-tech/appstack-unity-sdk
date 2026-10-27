@@ -52,6 +52,27 @@ jobs:
       - name: Assemble package
         run: bash scripts~/assemble-package.sh "$(node -p "require('./package.json').version")" --candidate
 
+  api-baseline:
+    name: Public API baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: '8.0.x'
+
+      # api~/Appstack.Runtime.api.cs matches the public surface of Runtime/.
+      # Whether a PR may change it at all is api-change-gate.yml's call.
+      - name: Check public API baseline is current
+        env:
+          DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+          DOTNET_NOLOGO: '1'
+        run: bash scripts~/api-baseline.sh --check
+
   android-bridge:
     name: Android bridge contract
     runs-on: ubuntu-latest
@@ -110,7 +131,7 @@ jobs:
 
   result:
     name: CI result
-    needs: [package, android-bridge, ios-bridge]
+    needs: [package, api-baseline, android-bridge, ios-bridge]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:

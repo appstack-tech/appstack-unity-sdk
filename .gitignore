@@ -101,3 +101,9 @@ InitTestScene*.unity*
 # Package assembly output (scripts~/assemble-package.sh)
 /dist/
 /appstack-unity-sdk-*.zip
+
+# Public API dump tool (scripts~/api-baseline.sh). The root rules above ignore
+# every *.csproj, which this one must not be.
+!/scripts~/api-dump/ApiDump.csproj
+/scripts~/api-dump/bin/
+/scripts~/api-dump/obj/

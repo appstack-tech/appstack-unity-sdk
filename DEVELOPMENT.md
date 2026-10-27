@@ -17,6 +17,8 @@ The repository root is the Unity Package Manager package root:
 - `Tests~/Integration/` contains the clean Unity player build and runtime
   fixture, also excluded from Unity import and release archives.
 - `Samples~/` and `Documentation~/` contain integrator-facing package content.
+- `api~/` holds the committed public API baseline, and `scripts~/` the
+  maintainer scripts that generate and check it.
 
 Keep all Unity `.meta` files committed. Generate a new unique GUID for every new
 asset; never copy a GUID from an existing metadata file.
@@ -63,6 +65,23 @@ Cross-platform behavior that must remain aligned:
 - The first successful `Configure` call wins inside the Unity wrapper. Exact
   repeats are silent, conflicting repeats warn without logging credentials, and
   native failures remain retryable.
+
+## Public API baseline
+
+`api~/Appstack.Runtime.api.cs` is the committed baseline of the public C# API,
+checked in CI and label-gated on PRs; [RELEASING.md](RELEASING.md#public-api-baseline)
+covers both and how to update it. The `~` keeps Unity from importing the
+folder, as with `scripts~/` and `Tests~/`.
+
+`scripts~/api-dump/` generates the baseline with Roslyn from source, so it
+needs only the .NET 8 SDK (or newer), not Unity or its engine assemblies.
+Engine types stay unresolved and print by their short name. The tool fails if
+the public surface differs between the editor, Android, iOS, and no-platform
+compilations: keep platform-specific code internal.
+
+`Tests/Editor/AppstackPublicApiSnapshotTests.cs` is the in-editor counterpart,
+read from the compiled assembly. Update its expected snapshot in the same
+change as the baseline.
 
 ## Auto-initialization architecture
 
