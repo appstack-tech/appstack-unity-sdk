@@ -4,8 +4,8 @@
 
 - `develop` is where all work lands. Branch off `develop`, open the PR **into
   `develop`**, and squash-merge it. Merging into `develop` publishes nothing.
-- `main` is release-only. Merging a PR into `main` **publishes the SDK** to the
-  Unity package registry.
+- `main` is release-only. Merging a PR into `main` **publishes the SDK**:
+  OpenUPM builds it from the `X.Y.Z` tag the workflow creates.
 - `main` is the default branch, so `gh pr create` and the GitHub UI target it
   unless told otherwise. Always pass `--base develop`.
 - Never open a PR into `main`, merge into it or push to it unless the user
