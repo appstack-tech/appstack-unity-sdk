@@ -45,10 +45,12 @@ deploy to. The job fails before packing when any of them is missing.
 - **`main`** only changes through release PRs. Merging one publishes.
 
 CI (`ci.yml`) runs on every PR into either branch: the version and package
-checks, the release-notes tests, and the Android and iOS bridge contracts
-from `Tests~/Native`. The Unity Test Runner editor tests and the player builds
-in `Tests~/Integration` need a Unity license, so they are not in CI; run them
-locally before a release (see [Validation](#validation)).
+checks, the release-notes tests, the public API baseline check, and the Android
+and iOS bridge contracts from `Tests~/Native`. A PR that changes the public API
+also needs a label (see [Public API baseline](#public-api-baseline)). The Unity
+Test Runner editor tests and the player builds in `Tests~/Integration` need a
+Unity license, so they are not in CI; run them locally before a release (see
+[Validation](#validation)).
 
 To cut a stable release:
 
@@ -57,11 +59,15 @@ To cut a stable release:
       versions. Update both native dependency pins, their validation fixtures,
       and the public platform documentation together. Both pins must name a
       released version.
-   2. Run `node scripts~/set-version.mjs X.Y.Z`. It updates `package.json`,
+   2. Pick `X.Y.Z` from the API changes since the last release:
+      `git diff <last-tag> -- 'api~/'`, or the `breaking` and `api-change`
+      labels on the merged PRs. A `breaking` change needs a major version; an
+      `api-change`, at least a minor one.
+   3. Run `node scripts~/set-version.mjs X.Y.Z`. It updates `package.json`,
       regenerates `Runtime/AppstackVersion.cs`, and promotes
       `## [Unreleased]` in `CHANGELOG.md` to `## [X.Y.Z] - <today>`. Preview
       the release body with `node scripts~/release-notes.mjs X.Y.Z`.
-   3. Confirm every package asset has a committed, unique `.meta` file.
+   4. Confirm every package asset has a committed, unique `.meta` file.
 
    Merge that into `develop`.
 2. Open a PR from `develop` into `main`. The **Release version** check
@@ -107,6 +113,43 @@ section.
 Inspect the release archive before publishing. Adding it as a local package to a
 clean Unity project must produce the same package contents and behavior as a
 repository checkout.
+
+## Public API baseline
+
+`api~/Appstack.Runtime.api.cs` is the committed baseline of the package's
+public C# API: every public type and member in `Runtime/`, sorted, so its diff
+reads as the API change itself. Integrators compile against this API, so every
+change to it is reviewed on purpose.
+
+- **CI (`ci.yml`)** regenerates the baseline from `Runtime/` in its *Public API
+  baseline* job and fails when it no longer matches the committed file. The
+  release workflow runs the same CI, so a release can't ship an API that
+  differs from the baseline.
+- **API change gate (`api-change-gate.yml`)** fails any PR that changes
+  `api~/Appstack.Runtime.api.cs` unless the PR has one of these labels:
+  - `api-change`: additive only (new type, method, overload, or an optional
+    parameter added at the end). Existing callers keep compiling. A new
+    `EventType` member also goes here when it is added at the end; inserting
+    one renumbers the members after it, which is `breaking`.
+  - `breaking`: something was removed or renamed, or a signature, parameter
+    name, default value, return type or enum value changed. Plan a major
+    version.
+
+  The diff is in the gate job's summary. Adding or removing a label re-runs the
+  gate by itself, without the bridge contract jobs. The release PR from
+  `develop` carries every API change since the last release, so it needs the
+  label too, matching the version bump.
+
+To change the API intentionally:
+
+```bash
+bash scripts~/api-baseline.sh
+bash scripts~/api-baseline.sh --check
+```
+
+Commit the updated `api~/Appstack.Runtime.api.cs` with the code change and
+label the PR. The script needs the .NET 8 SDK (or newer); see
+[DEVELOPMENT.md](DEVELOPMENT.md#public-api-baseline) for how the dump is made.
 
 ## Testing a release candidate
 
