@@ -7,6 +7,32 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `GetAttributionParams()` now returns `confidence_tier` (`high`, `medium` or
+  `low`), the confidence of the attribution match. It isn't returned for an
+  organic install. iOS: it now also returns `deeplink_id`, the ID of the matched
+  link, as Android already did.
+- Android: `GetAttributionParams()` now always includes `appstack_match_status`,
+  as on iOS: `matched`, `matched_no_params`, `organic`, `skipped` and
+  `not_configured` are settled answers, and `failed` is worth re-reading later.
+
+### Changed
+
+- Pinned the Appstack iOS SDK to `4.8.0`, which brings `deeplink_id` and
+  `confidence_tier`, and the Appstack Android SDK to `1.12.0`, which brings
+  `confidence_tier` and `appstack_match_status`. No C# API change is required.
+- Android: an organic install now returns `appstack_match_status: organic` and
+  no `deeplink_id`, and `GetAttributionParams()` called before `Configure()`
+  returns `appstack_match_status: not_configured` instead of an empty
+  dictionary. Check the status key instead of checking the dictionary for
+  content.
+
+### Fixed
+
+- Android: fixed a rare crash (`IllegalArgumentException: Service not
+  registered`) when closing the Play Store install referrer connection.
+
 ## [1.6.1] - 2026-09-22
 
 ### Changed
