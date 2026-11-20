@@ -23,6 +23,7 @@ public sealed class AppstackRuntimeProbe : MonoBehaviour
     private int callbackCount;
     private int successCount;
     private bool attributionValidated = true;
+    private AttributionMetadata attributionMetadata;
     private int mainThreadId;
 
     private void Awake()
@@ -144,6 +145,7 @@ public sealed class AppstackRuntimeProbe : MonoBehaviour
                     callbackThreads.Count == ExpectedCallbacks &&
                     callbackThreads.TrueForAll(id => id == mainThreadId),
                 attributionValidated = attributionValidated,
+                attributionMetadata = attributionMetadata,
                 errors = callbackErrors.ToArray()
             };
         }
@@ -165,7 +167,21 @@ public sealed class AppstackRuntimeProbe : MonoBehaviour
             successCount++;
             callbackThreads.Add(Thread.CurrentThread.ManagedThreadId);
             attributionValidated &= valid;
+            if (parameters != null)
+            {
+                attributionMetadata = new AttributionMetadata
+                {
+                    deeplink_id = StringValue(parameters, "deeplink_id"),
+                    confidence_tier = StringValue(parameters, "confidence_tier"),
+                    appstack_match_status = StringValue(parameters, "appstack_match_status"),
+                };
+            }
         }
+    }
+
+    private static string StringValue(Dictionary<string, object> parameters, string key)
+    {
+        return parameters.TryGetValue(key, out var value) ? value as string : null;
     }
 
     private void OnAttributionError(string error)
@@ -260,7 +276,19 @@ public sealed class AppstackRuntimeProbe : MonoBehaviour
         public int[] callbackThreads;
         public bool callbacksOnMainThread;
         public bool attributionValidated;
+        public AttributionMetadata attributionMetadata;
         public string[] errors;
+    }
+
+    /// Match metadata the native SDKs add next to the link's query parameters.
+    /// Field names are the attribution keys. JsonUtility writes a missing value
+    /// as an empty string.
+    [Serializable]
+    private sealed class AttributionMetadata
+    {
+        public string deeplink_id;
+        public string confidence_tier;
+        public string appstack_match_status;
     }
 
     [Serializable]

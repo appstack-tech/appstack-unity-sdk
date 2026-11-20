@@ -164,6 +164,14 @@ def main() -> None:
     require(result.get("successCount") == 3, "attribution callbacks did not all succeed")
     require(result.get("callbacksOnMainThread") is True, "callback left Unity's main thread")
     require(result.get("attributionValidated") is True, "attribution payload was corrupted")
+    metadata = result.get("attributionMetadata") or {}
+    expected_metadata = {
+        "deeplink_id": "runtime-validation-deeplink",
+        "confidence_tier": "high",
+        "appstack_match_status": "matched",
+    }
+    require(metadata == expected_metadata,
+            f"attribution metadata did not cross the bridge: expected {expected_metadata}, got {metadata}")
     require(not result.get("errors"), f"runtime callback errors: {result.get('errors')}")
     link_cases = collect(runtime_log, LINK_PREFIX)
     validate_universal_links(link_cases)
