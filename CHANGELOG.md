@@ -7,6 +7,8 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-11-20
+
 ### Added
 
 - `GetAttributionParams()` now returns `confidence_tier` (`high`, `medium` or
