@@ -17,6 +17,8 @@ The repository root is the Unity Package Manager package root:
 - `Tests~/Integration/` contains the clean Unity player build and runtime
   fixture, also excluded from Unity import and release archives.
 - `Samples~/` and `Documentation~/` contain integrator-facing package content.
+- `api~/` holds the committed public API baseline, and `scripts~/` the
+  maintainer scripts that generate and check it.
 
 Keep all Unity `.meta` files committed. Generate a new unique GUID for every new
 asset; never copy a GUID from an existing metadata file.
@@ -64,6 +66,23 @@ Cross-platform behavior that must remain aligned:
   repeats are silent, conflicting repeats warn without logging credentials, and
   native failures remain retryable.
 
+## Public API baseline
+
+`api~/Appstack.Runtime.api.cs` is the committed baseline of the public C# API,
+checked in CI and label-gated on PRs; [RELEASING.md](RELEASING.md#public-api-baseline)
+covers both and how to update it. The `~` keeps Unity from importing the
+folder, as with `scripts~/` and `Tests~/`.
+
+`scripts~/api-dump/` generates the baseline with Roslyn from source, so it
+needs only the .NET 8 SDK (or newer), not Unity or its engine assemblies.
+Engine types stay unresolved and print by their short name. The tool fails if
+the public surface differs between the editor, Android, iOS, and no-platform
+compilations: keep platform-specific code internal.
+
+`Tests/Editor/AppstackPublicApiSnapshotTests.cs` is the in-editor counterpart,
+read from the compiled assembly. Update its expected snapshot in the same
+change as the baseline.
+
 ## Auto-initialization architecture
 
 `AppstackAutoInitializationSettings` is an internal runtime `ScriptableObject`
@@ -92,9 +111,9 @@ injection, and environment variables are intentionally deferred.
 
 Dependency versions are declared in the platform-specific editor integration:
 
-- Android: `tech.appstack.android-sdk:appstack-android-sdk:1.11.0` in
+- Android: `tech.appstack.android-sdk:appstack-android-sdk:1.12.0` in
   `Editor/AppstackDependencies.xml`
-- iOS: `AppstackSDK` Swift package product at `4.7.2` in
+- iOS: `AppstackSDK` Swift package product at `4.8.0` in
   `Editor/AppstackIOSPostProcessBuild.cs`
 
 When either native dependency changes, update the corresponding editor
@@ -136,7 +155,7 @@ the application target so Xcode embeds and signs the dynamic framework. It also
 sets the Swift language version and enables Swift standard-library embedding on
 the application target.
 
-The `4.7.2` Swift package uses its binary XCFramework. Its private Swift
+The `4.8.0` Swift package uses its binary XCFramework. Its private Swift
 interfaces expose the `AppstackInternal` SPI used by this bridge. The native
 contract fixture compiles the production bridge against the exact tagged binary
 and must pass before adopting any future binary SDK tag.

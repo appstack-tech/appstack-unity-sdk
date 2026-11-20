@@ -63,7 +63,7 @@ iOS exports an IL2CPP Xcode project and verifies all of the following before
 compiling it without code signing:
 
 - the Swift bridge is copied and compiled in `UnityFramework`;
-- the SPM URL and exact `4.7.2` requirement are present;
+- the SPM URL and exact `4.8.0` requirement are present;
 - `AppstackSDK` is linked to `UnityFramework` and the application target;
 - the Swift language and runtime-embedding build settings are present;
 - Xcode resolves the package, compiles the application, and produces
@@ -121,6 +121,8 @@ The machine-readable runtime probe and request validator prove that:
 - native install attribution performs a local match request and preserves
   UTF-8 query parameters through the callback, using each native SDK's expected
   `match_url` form;
+- the match metadata `deeplink_id`, `confidence_tier` and
+  `appstack_match_status` reaches C# from both native SDKs;
 - three immediately successive attribution requests all complete once on the
   Unity main thread;
 - after remote configuration is observably ready, a custom event and a

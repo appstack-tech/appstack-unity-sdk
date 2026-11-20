@@ -4,5 +4,10 @@ DEVELOPMENT.md
 DEVELOPMENT.md.meta
 RELEASING.md
 RELEASING.md.meta
+api~/
 scripts~/
 Tests~/
+AGENTS.md
+AGENTS.md.meta
+CLAUDE.md
+CLAUDE.md.meta
