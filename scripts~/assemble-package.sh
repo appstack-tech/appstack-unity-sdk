@@ -5,7 +5,9 @@
 #
 # Writes dist/appstack-unity-sdk-<version>/ and appstack-unity-sdk-<version>.zip
 # at the repository root, and prints both paths as `package_root=` and
-# `package_name=` lines (append them to $GITHUB_ENV in a workflow).
+# `package_name=` lines (append them to $GITHUB_ENV in a workflow). Those two
+# lines are its only stdout: every other message goes to stderr, because
+# $GITHUB_ENV rejects anything that isn't KEY=value.
 #
 # Without --candidate it also enforces the release rules on the native pins:
 # both must name a released X.Y.Z version, and nothing in the package may name
@@ -18,7 +20,7 @@ CANDIDATE=false
 if [[ "${2:-}" == "--candidate" ]]; then
   CANDIDATE=true
 elif [[ -n "${2:-}" ]]; then
-  echo "::error::Unknown option: $2"
+  echo "::error::Unknown option: $2" >&2
   exit 1
 fi
 
@@ -41,7 +43,7 @@ rm -rf "$PACKAGE_ROOT" "${PACKAGE_NAME}.zip"
 mkdir -p "$PACKAGE_ROOT"
 for entry in "${PACKAGE_ENTRIES[@]}"; do
   if [[ ! -e "$entry" ]]; then
-    echo "::error::Required package entry is missing: $entry"
+    echo "::error::Required package entry is missing: $entry" >&2
     exit 1
   fi
   cp -R "$entry" "$PACKAGE_ROOT/"
@@ -54,8 +56,8 @@ if [[ "$CANDIDATE" == "false" ]]; then
   # the pin just has to be a plain release version by the time it reaches main.
   # Scanning the assembled package covers the dependency declaration and any
   # setup documentation that names it, without a path list to keep in sync.
-  if grep -rn -- '-SNAPSHOT' "$PACKAGE_ROOT"; then
-    echo "::error::The package would ship a -SNAPSHOT native dependency (see matches above). Move the pin to a released version first."
+  if grep -rn -- '-SNAPSHOT' "$PACKAGE_ROOT" >&2; then
+    echo "::error::The package would ship a -SNAPSHOT native dependency (see matches above). Move the pin to a released version first." >&2
     exit 1
   fi
 
@@ -65,11 +67,11 @@ if [[ "$CANDIDATE" == "false" ]]; then
   IOS_PIN="$(sed -n 's/.*private const string PackageVersion = "\([^"]*\)".*/\1/p' Editor/AppstackIOSPostProcessBuild.cs)"
   for pin in "Android:$ANDROID_PIN" "iOS:$IOS_PIN"; do
     if [[ ! "${pin#*:}" =~ ^[0-9]+[.][0-9]+[.][0-9]+$ ]]; then
-      echo "::error::The ${pin%%:*} native pin must be a released X.Y.Z version, found '${pin#*:}'."
+      echo "::error::The ${pin%%:*} native pin must be a released X.Y.Z version, found '${pin#*:}'." >&2
       exit 1
     fi
   done
-  echo "Native pins: Android $ANDROID_PIN, iOS $IOS_PIN."
+  echo "Native pins: Android $ANDROID_PIN, iOS $IOS_PIN." >&2
 fi
 
 (cd dist && zip -q -r "../${PACKAGE_NAME}.zip" "$PACKAGE_NAME")
